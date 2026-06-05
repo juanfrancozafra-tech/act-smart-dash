@@ -199,26 +199,3 @@ export function HealthGauge({ score }: { score: number }) {
     </div>
   );
 }
-        <circle
-          cx="50"
-          cy="50"
-          r="42"
-          fill="none"
-          stroke={color}
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeDasharray={`${(score / 100) * 264} 264`}
-          transform="rotate(-90 50 50)"
-        />
-      </svg>
-      <div className="absolute inset-0 grid place-items-center">
-        <div className="text-center">
-          <div className="text-3xl font-bold tabular-nums">{score}</div>
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Health</div>
-        </div>
-      </div>
-      {/* hide recharts placeholder */}
-      <style>{`.recharts-wrapper{visibility:hidden}`}</style>
-    </div>
-  );
-}
