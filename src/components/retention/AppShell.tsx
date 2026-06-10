@@ -7,7 +7,10 @@ import {
   FlaskConical,
   Settings,
   Activity,
+  Download,
 } from "lucide-react";
+import { PeriodSelector } from "./PeriodSelector";
+import { ExportReportDialog } from "./ExportReportDialog";
 
 const nav = [
   { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -65,12 +68,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="text-xs text-muted-foreground">Customer Success</div>
             <h1 className="text-base font-semibold tracking-tight">Account Health Dashboard</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground mr-2">
               <span className="size-2 rounded-full bg-success" />
               Live · synced 2 min ago
             </div>
-            <div className="size-9 rounded-full bg-primary/15 text-primary grid place-items-center text-sm font-semibold">
+            <PeriodSelector />
+            <ExportReportDialog
+              trigger={
+                <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium">
+                  <Download className="size-3.5" />
+                  Export Report
+                </button>
+              }
+            />
+            <div className="size-9 rounded-full bg-primary/15 text-primary grid place-items-center text-sm font-semibold ml-1">
               PS
             </div>
           </div>
