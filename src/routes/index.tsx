@@ -31,9 +31,6 @@ import {
 } from "@/lib/retention-scaling";
 
 export const Route = createFileRoute("/")({
-  validateSearch: (s: Record<string, unknown>): { demo?: "empty" } => ({
-    demo: s.demo === "empty" ? "empty" : undefined,
-  }),
   head: () => ({
     meta: [
       { title: "Retention Dashboard · Retain" },
@@ -45,19 +42,24 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const { period } = usePeriod();
-  const { demo } = Route.useSearch();
   const kpis = useMemo(() => getScaledKpis(period.days), [period.days]);
   const churnTrend = useMemo(() => getScaledChurnTrend(period.days), [period.days]);
   const funnel = useMemo(() => getScaledFunnel(period.days), [period.days]);
   const atRisk = useMemo(() => getScaledAtRiskAccounts(period.days), [period.days]);
 
-  if (demo === "empty") {
+  // When the selected window is so short that no churn signals have landed in
+  // it, the dashboard has nothing meaningful to show — switch to the empty
+  // state instead of rendering near-zero charts.
+  const noSignals = atRisk.length === 0 && churnTrend.length <= 1;
+
+  if (noSignals) {
     return (
       <AppShell>
         <DashboardEmpty />
       </AppShell>
     );
   }
+
 
   return (
     <AppShell>
