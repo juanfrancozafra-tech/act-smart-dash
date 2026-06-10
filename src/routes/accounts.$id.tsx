@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -15,9 +15,16 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/retention/AppShell";
 import { HealthGauge } from "@/components/retention/Charts";
+import { AccountDetailSkeleton } from "@/components/retention/Skeletons";
+import { AccountEmpty } from "@/components/retention/EmptyStates";
 import { getAccount, recommendedInterventions } from "@/lib/retention-data";
 
+type DemoState = "loading" | "empty" | undefined;
+
 export const Route = createFileRoute("/accounts/$id")({
+  validateSearch: (s: Record<string, unknown>): { demo?: DemoState } => ({
+    demo: s.demo === "loading" || s.demo === "empty" ? (s.demo as DemoState) : undefined,
+  }),
   loader: ({ params }) => {
     const account = getAccount(params.id);
     if (!account) throw notFound();
@@ -36,7 +43,35 @@ type FlowStep = "idle" | "compose" | "sent";
 
 function AccountDetail() {
   const { account } = Route.useLoaderData();
+  const { demo } = Route.useSearch();
   const [step, setStep] = useState<FlowStep>("idle");
+
+  // Simulate a brief fetch when demo=loading is set
+  const [simulatedLoading, setSimulatedLoading] = useState(demo === "loading");
+  useEffect(() => {
+    if (demo === "loading") {
+      setSimulatedLoading(true);
+      const t = setTimeout(() => setSimulatedLoading(false), 2200);
+      return () => clearTimeout(t);
+    }
+    setSimulatedLoading(false);
+  }, [demo]);
+
+  if (simulatedLoading) {
+    return (
+      <AppShell>
+        <AccountDetailSkeleton />
+      </AppShell>
+    );
+  }
+
+  if (demo === "empty") {
+    return (
+      <AppShell>
+        <AccountEmpty accountName={account.name} />
+      </AppShell>
+    );
+  }
 
   const onboardingSteps = [
     { label: "Workspace created", done: true },
@@ -48,6 +83,7 @@ function AccountDetail() {
 
   return (
     <AppShell>
+
       <div className="p-6 space-y-6 max-w-[1400px] mx-auto">
         <Link
           to="/"
