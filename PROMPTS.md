@@ -92,4 +92,31 @@ This document captures the three iterative prompts used to evolve the Retention 
 
 ---
 
+## 4. Sort — At-Risk Accounts Table Sorting
+
+### Prompt
+
+> Enhance the At-Risk Accounts table by adding sorting functionality to improve data exploration and prioritization.
+>
+> **Sortable columns:** Account Name (A–Z / Z–A), Health (High–Low / Low–High), Risk (High–Low / Low–High), Last Activity (Newest–Oldest / Oldest–Newest), ARR (High–Low / Low–High).
+>
+> **UX behavior:** sort indicator (asc / desc / unsorted) on each header, only one active sort at a time, sort persists across navigation, smooth animation on reorder, performant with large datasets.
+>
+> **Visual design:** follow the existing design system, subtle hover states on headers, indicators visible but unobtrusive, readability preserved across states.
+>
+> **Default:** sort by Churn Risk (Highest → Lowest) so the most urgent accounts surface first.
+
+### Result
+
+- **Sortable headers** — `Panels.tsx` introduces a `SortHeader` button rendered in the Account, Health, Risk, Last active, and ARR columns. Each header shows `ChevronsUpDown` when inactive, and `ChevronUp` / `ChevronDown` in primary color when active. Subtle hover background (`hover:bg-muted`) and full ARIA support (`aria-sort`, `aria-label`) included.
+- **Single active sort** — A single `SortState = { key, dir }` lives in component state. Clicking a new column sets a sensible default direction (`asc` for name/last-active, `desc` for numeric). Clicking the active column toggles direction.
+- **Default to risk High → Low** — Initial state is `{ key: "riskLevel", dir: "desc" }` using a `RISK_RANK` map (`High: 3, Medium: 2, Low: 1`), so the most urgent accounts surface on first load.
+- **Persistence** — Sort state is serialized to `localStorage` under `retain:atrisk-sort` and rehydrated on mount, preserving the user's choice across dashboard ↔ account detail navigation and page reloads.
+- **Smooth animation** — Rows are wrapped in `motion.tr` with `layout` inside `AnimatePresence`, using a `cubic-bezier(0.22, 1, 0.36, 1)` ease over 220ms. FLIP-style transitions move rows to their new positions without jank.
+- **Performance** — Sorting is a single `useMemo` pass with a stable tiebreaker by `id`. A `lastActiveScore` helper parses strings like `"6 days ago"` / `"3 hours ago"` / `"today"` into comparable numbers without per-render work.
+- **Library** — Added `motion` (the modern `framer-motion` package) for layout animations.
+
+---
+
 *This file is committed alongside the source. Because the project is connected to GitHub, saving it here pushes it to the connected repository automatically.*
+
