@@ -20,6 +20,7 @@ import {
   recommendedInterventions,
   userQuotes,
 } from "@/lib/retention-data";
+import { DashboardEmpty } from "@/components/retention/EmptyStates";
 import { usePeriod } from "@/lib/period-context";
 import {
   getScaledKpis,
@@ -30,6 +31,9 @@ import {
 } from "@/lib/retention-scaling";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (s: Record<string, unknown>): { demo?: "empty" } => ({
+    demo: s.demo === "empty" ? "empty" : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Retention Dashboard · Retain" },
@@ -41,10 +45,19 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const { period } = usePeriod();
+  const { demo } = Route.useSearch();
   const kpis = useMemo(() => getScaledKpis(period.days), [period.days]);
   const churnTrend = useMemo(() => getScaledChurnTrend(period.days), [period.days]);
   const funnel = useMemo(() => getScaledFunnel(period.days), [period.days]);
   const atRisk = useMemo(() => getScaledAtRiskAccounts(period.days), [period.days]);
+
+  if (demo === "empty") {
+    return (
+      <AppShell>
+        <DashboardEmpty />
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
