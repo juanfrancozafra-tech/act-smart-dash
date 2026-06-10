@@ -12,6 +12,8 @@ interface Props {
   delta: number;
   inverse?: boolean;
   highlight?: boolean;
+  /** "bare" removes the card border/radius for use inside a grouped strip. */
+  variant?: "card" | "bare";
   info?: {
     calculation: string;
     why: string;
@@ -19,35 +21,46 @@ interface Props {
   };
 }
 
-export function KpiCard({ label, value, suffix, delta, inverse, highlight, info }: Props) {
+export function KpiCard({ label, value, suffix, delta, inverse, highlight, info, variant = "card" }: Props) {
   const positive = inverse ? delta < 0 : delta > 0;
   const Icon = delta >= 0 ? ArrowUpRight : ArrowDownRight;
 
+  const bareClasses = `group cursor-pointer relative bg-card p-5 transition-colors duration-200 hover:bg-muted/40 ${
+    highlight ? "ring-1 ring-inset ring-primary/30" : ""
+  }`;
+  const cardClasses = `group cursor-pointer rounded-xl border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30 ${
+    highlight ? "border-primary/40 ring-1 ring-primary/15" : "border-border"
+  }`;
+
   const card = (
-    <div
-      className={`group cursor-pointer rounded-xl border bg-card p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-foreground/5 hover:border-primary/40 ${
-        highlight ? "border-primary/40 ring-1 ring-primary/15" : "border-border"
-      }`}
-    >
+    <div className={variant === "bare" ? bareClasses : cardClasses}>
+      {variant === "bare" && highlight && (
+        <span className="absolute top-3 right-3 text-[9.5px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+          Key
+        </span>
+      )}
       <div className="flex items-center justify-between">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.06em]">
           {label}
         </div>
-        {info && (
+        {info && variant === "card" && (
           <Info className="size-3.5 text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
       </div>
-      <div className="mt-2 flex items-baseline gap-1">
-        <span className="text-3xl font-semibold tracking-tight tabular-nums">{value}</span>
+      <div className="mt-2.5 flex items-baseline gap-1">
+        <span className="text-[28px] font-semibold tracking-tight tabular-nums text-foreground leading-none">
+          {value}
+        </span>
         {suffix && <span className="text-sm text-muted-foreground">{suffix}</span>}
       </div>
       <div
-        className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${
+        className={`mt-2.5 inline-flex items-center gap-1 text-[11px] font-medium ${
           positive ? "text-success" : "text-destructive"
         }`}
       >
         <Icon className="size-3.5" />
-        {Math.abs(delta)}% vs last cohort
+        {Math.abs(delta)}%
+        <span className="text-muted-foreground font-normal ml-0.5">vs last cohort</span>
       </div>
     </div>
   );
