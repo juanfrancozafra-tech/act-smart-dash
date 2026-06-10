@@ -153,6 +153,24 @@ export const accounts: Account[] = [
     weeklyActiveUsers: 4,
     csm: "Marcus Lin",
   },
+  {
+    id: "horizon-data",
+    name: "Horizon Data",
+    industry: "Analytics",
+    seats: 8,
+    invitedSeats: 0,
+    healthScore: 0,
+    primaryRisk: "Awaiting data",
+    riskLevel: "Low",
+    daysSinceSignup: 1,
+    lastActive: "Just signed up",
+    arr: 0,
+    onboardingCompletion: 0,
+    featuresAdopted: 0,
+    featuresTotal: 12,
+    weeklyActiveUsers: 0,
+    csm: "Unassigned",
+  },
 ];
 
 export const aiInsights = [

@@ -19,12 +19,7 @@ import { AccountDetailSkeleton } from "@/components/retention/Skeletons";
 import { AccountEmpty } from "@/components/retention/EmptyStates";
 import { getAccount, recommendedInterventions } from "@/lib/retention-data";
 
-type DemoState = "loading" | "empty" | undefined;
-
 export const Route = createFileRoute("/accounts/$id")({
-  validateSearch: (s: Record<string, unknown>): { demo?: DemoState } => ({
-    demo: s.demo === "loading" || s.demo === "empty" ? (s.demo as DemoState) : undefined,
-  }),
   loader: ({ params }) => {
     const account = getAccount(params.id);
     if (!account) throw notFound();
@@ -43,21 +38,18 @@ type FlowStep = "idle" | "compose" | "sent";
 
 function AccountDetail() {
   const { account } = Route.useLoaderData();
-  const { demo } = Route.useSearch();
   const [step, setStep] = useState<FlowStep>("idle");
 
-  // Simulate a brief fetch when demo=loading is set
-  const [simulatedLoading, setSimulatedLoading] = useState(demo === "loading");
+  // Simulate the brief client-side fetch every time the user lands on a client
+  // detail page — the skeleton tracks the real loading window.
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    if (demo === "loading") {
-      setSimulatedLoading(true);
-      const t = setTimeout(() => setSimulatedLoading(false), 2200);
-      return () => clearTimeout(t);
-    }
-    setSimulatedLoading(false);
-  }, [demo]);
+    setLoading(true);
+    const t = setTimeout(() => setLoading(false), 750);
+    return () => clearTimeout(t);
+  }, [account.id]);
 
-  if (simulatedLoading) {
+  if (loading) {
     return (
       <AppShell>
         <AccountDetailSkeleton />
@@ -65,13 +57,21 @@ function AccountDetail() {
     );
   }
 
-  if (demo === "empty") {
+  // Brand-new accounts have no recorded signals yet — show the empty state
+  // instead of rendering meaningless zeroed-out charts.
+  const hasNoSignal =
+    account.weeklyActiveUsers === 0 &&
+    account.onboardingCompletion < 10 &&
+    account.invitedSeats === 0;
+
+  if (hasNoSignal) {
     return (
       <AppShell>
         <AccountEmpty accountName={account.name} />
       </AppShell>
     );
   }
+
 
   const onboardingSteps = [
     { label: "Workspace created", done: true },

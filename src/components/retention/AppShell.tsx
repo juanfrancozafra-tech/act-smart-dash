@@ -8,49 +8,9 @@ import {
   Settings,
   Activity,
   Download,
-  Eye,
 } from "lucide-react";
 import { PeriodSelector } from "./PeriodSelector";
 import { ExportReportDialog } from "./ExportReportDialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-function StatePreviewMenu() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const onAccount = pathname.startsWith("/accounts/");
-  const accountId = onAccount ? pathname.split("/")[2] : "acme-inc";
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          className="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-md border border-dashed border-border bg-surface hover:bg-muted text-xs text-muted-foreground"
-          title="Preview UI states"
-        >
-          <Eye className="size-3.5" />
-          States
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-56 p-1 text-sm">
-        <div className="px-2.5 py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-          Dashboard
-        </div>
-        <Link to="/" className="block px-2.5 py-1.5 rounded-md hover:bg-muted">Live data</Link>
-        <Link to="/" search={{ demo: "empty" } as any} className="block px-2.5 py-1.5 rounded-md hover:bg-muted">Empty state</Link>
-        <div className="px-2.5 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold border-t border-border mt-1">
-          Client detail
-        </div>
-        <Link to="/accounts/$id" params={{ id: accountId }} className="block px-2.5 py-1.5 rounded-md hover:bg-muted">
-          Live data
-        </Link>
-        <Link to="/accounts/$id" params={{ id: accountId }} search={{ demo: "loading" } as any} className="block px-2.5 py-1.5 rounded-md hover:bg-muted">
-          Skeleton loading
-        </Link>
-        <Link to="/accounts/$id" params={{ id: accountId }} search={{ demo: "empty" } as any} className="block px-2.5 py-1.5 rounded-md hover:bg-muted">
-          Empty state
-        </Link>
-      </PopoverContent>
-    </Popover>
-  );
-}
 
 const nav = [
   { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
@@ -114,7 +74,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Live · synced 2 min ago
             </div>
             <PeriodSelector />
-            <StatePreviewMenu />
             <ExportReportDialog
               trigger={
                 <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium">
