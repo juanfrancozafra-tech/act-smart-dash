@@ -74,7 +74,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               Live · synced 2 min ago
             </div>
             <PeriodSelector />
-            <StatePreviewMenu />
             <ExportReportDialog
               trigger={
                 <button className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium">
