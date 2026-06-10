@@ -50,7 +50,6 @@ export function DashboardEmpty() {
           </button>
           <Link
             to="/"
-            search={{ demo: undefined }}
             className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-border bg-surface text-sm font-medium hover:bg-muted"
           >
             View example dashboard
