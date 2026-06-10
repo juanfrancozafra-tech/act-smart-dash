@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { Download } from "lucide-react";
 import { AppShell } from "@/components/retention/AppShell";
+import { PeriodSelector } from "@/components/retention/PeriodSelector";
+import { ExportReportDialog } from "@/components/retention/ExportReportDialog";
 import { KpiCard } from "@/components/retention/KpiCard";
 import {
   ChurnTrendChart,
@@ -47,9 +50,6 @@ function Dashboard() {
   const funnel = useMemo(() => getScaledFunnel(period.days), [period.days]);
   const atRisk = useMemo(() => getScaledAtRiskAccounts(period.days), [period.days]);
 
-  // When the selected window is so short that no churn signals have landed in
-  // it, the dashboard has nothing meaningful to show — switch to the empty
-  // state instead of rendering near-zero charts.
   const noSignals = atRisk.length === 0 && churnTrend.length <= 1;
 
   if (noSignals) {
@@ -60,30 +60,52 @@ function Dashboard() {
     );
   }
 
-
   return (
     <AppShell>
-      <div className="p-6 space-y-6 max-w-[1500px] mx-auto">
-        <div className="flex items-end justify-between flex-wrap gap-3">
-          <div>
-            <h2 className="text-2xl font-semibold tracking-tight">
-              {period.label} · Q2 2026 cohort
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {kpis.churn90.value}% of accounts churn within this window. The dashboard
-              below traces where they drop off and what to do about it.
+      <div className="px-8 py-7 max-w-[1440px] mx-auto">
+        {/* Page header — Stripe-style: large title, supporting copy, actions */}
+        <div className="flex items-start justify-between gap-6 flex-wrap mb-8">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-semibold tracking-tight text-foreground leading-tight">
+              Account Health
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
+              {period.label.toLowerCase()} · Q2 2026 cohort. {kpis.churn90.value}% of accounts
+              churn within this window — trace where they drop off and act on it below.
             </p>
+            <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-1.5 rounded-full bg-success" />
+                Live data
+              </span>
+              <span className="text-border">·</span>
+              <span>Synced 2 min ago</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <PeriodSelector />
+            <ExportReportDialog
+              trigger={
+                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground hover:bg-[#1D4ED8] shadow-xs text-[13px] font-medium transition-colors">
+                  <Download className="size-3.5" />
+                  Export
+                </button>
+              }
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <KpiCard {...kpis.retention90} info={kpiInfo.retention90} />
-          <KpiCard {...kpis.churn90} info={kpiInfo.churn90} />
-          <KpiCard {...kpis.activated} info={kpiInfo.activated} />
-          <KpiCard {...kpis.inviteRate} info={kpiInfo.inviteRate} highlight />
-          <KpiCard {...kpis.health} info={kpiInfo.health} />
+        {/* KPI strip */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-px rounded-xl border border-border bg-border overflow-hidden mb-8">
+          <KpiCard {...kpis.retention90} info={kpiInfo.retention90} variant="bare" />
+          <KpiCard {...kpis.churn90} info={kpiInfo.churn90} variant="bare" />
+          <KpiCard {...kpis.activated} info={kpiInfo.activated} variant="bare" />
+          <KpiCard {...kpis.inviteRate} info={kpiInfo.inviteRate} highlight variant="bare" />
+          <KpiCard {...kpis.health} info={kpiInfo.health} variant="bare" />
         </div>
 
+        {/* Main grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <ChurnTrendChart data={churnTrend} />
@@ -101,7 +123,9 @@ function Dashboard() {
           </aside>
         </div>
 
-        <QuotesStrip quotes={userQuotes} />
+        <div className="mt-8">
+          <QuotesStrip quotes={userQuotes} />
+        </div>
       </div>
     </AppShell>
   );
