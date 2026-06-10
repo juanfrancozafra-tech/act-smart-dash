@@ -130,7 +130,7 @@ export function AIInsightsPanel({
           return (
             <div
               key={i.title}
-              className={`rounded-lg border p-3 ${sevStyles[i.severity]}`}
+              className={`group cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-foreground/5 ${sevStyles[i.severity]}`}
             >
               <div className="flex items-start gap-2">
                 <Icon className="size-4 mt-0.5 shrink-0" />
