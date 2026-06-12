@@ -59,7 +59,7 @@ The intervention surface. Designed so a user can go from "this account looks bad
 
 ### What we optimized for
 - **Speed of comprehension over completeness.** Every screen has one job. The dashboard answers *"who is at risk and why?"*; the detail page answers *"what do I do about it?"*.
-- **Clickable end-to-end over real backend.** This is a validation prototype, not a product. All data is mocked in `src/lib/retention-data.ts` so the entire flow works from a single shareable link with zero setup.
+- **Clickable end-to-end over real backend.** This is a validation prototype, not a product. All data is mocked in `src/features/retention/data/retentionData.ts` so the entire flow works from a single shareable link with zero setup.
 - **One distinctive visual direction.** Custom Inter-based theme with semantic risk tokens (High / Medium / Low) in OKLCH, rather than generic SaaS purple-on-white.
 
 ### Stack
@@ -136,13 +136,6 @@ src/
   - New cross-cutting hook → `hooks/`
   - New cross-cutting utility (formatter, error reporter, etc.) → `lib/`
 
-### Stack
-
-- **TanStack Start v1** (React 19, Vite 7) for file-based routing and a single shareable public URL.
-- **Recharts** for the churn curve, activation funnel, and invite-vs-retention comparison.
-- **Custom SVG** for the account health gauge — Recharts was the wrong primitive for a single-value radial.
-- **Tailwind v4** via `src/styles.css` using native `@import` + theme variables (no legacy `tailwind.config.js`).
-- **No database, no auth.** Intentional — the prototype must open instantly from a link with no friction.
 
 ### Explicitly out of scope
 - Real telemetry / data pipeline
