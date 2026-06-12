@@ -1,4 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -9,7 +10,10 @@ import {
   Search,
   Bell,
   ChevronDown,
+  LogOut,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const navGroups = [
   {
@@ -32,6 +36,28 @@ const navGroups = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [initials, setInitials] = useState("·");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const name = (u.user_metadata?.full_name as string | undefined) || u.email || "";
+      const parts = name.split(/[ @]/).filter(Boolean);
+      const init = (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
+      setInitials(init.toUpperCase() || "U");
+    });
+  }, []);
+
+  const signOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
@@ -105,14 +131,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <button className="size-8 grid place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
               <Bell className="size-4" />
             </button>
             <div className="h-5 w-px bg-border mx-1" />
-            <div className="size-8 rounded-full bg-primary/10 text-primary grid place-items-center text-[12px] font-semibold">
-              PS
-            </div>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="size-8 rounded-full bg-primary/10 text-primary grid place-items-center text-[12px] font-semibold hover:bg-primary/20"
+            >
+              {initials}
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-10 z-50 w-44 rounded-md border border-border bg-card shadow-md py-1">
+                <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left">
+                  <LogOut className="size-3.5" /> Sign out
+                </button>
+              </div>
+            )}
           </div>
         </header>
 
