@@ -13,12 +13,7 @@ import { AIInsightsPanel } from "./AIInsightsPanel";
 import { RecommendedInterventionsPanel } from "./RecommendedInterventionsPanel";
 import { UserQuotesStrip } from "./UserQuotesStrip";
 import { DashboardEmptyState } from "./DashboardEmptyState";
-import {
-  topDrivers,
-  aiInsights,
-  recommendedInterventions,
-  userQuotes,
-} from "../data/retentionData";
+import { useRetentionData } from "../data/retentionData";
 import { usePeriod } from "../data/periodContext";
 import {
   getScaledKpis,
@@ -28,17 +23,51 @@ import {
   kpiInfo,
 } from "../data/retentionScaling";
 
-/**
- * RetentionDashboard — the triage surface. Designed so a CS or Growth user
- * can identify the dominant churn driver within 10 seconds.
- */
 export function RetentionDashboard() {
   const { period } = usePeriod();
-  const kpis = useMemo(() => getScaledKpis(period.days), [period.days]);
-  const churnTrend = useMemo(() => getScaledChurnTrend(period.days), [period.days]);
-  const funnel = useMemo(() => getScaledFunnel(period.days), [period.days]);
-  const atRisk = useMemo(() => getScaledAtRiskAccounts(period.days), [period.days]);
+  const { data, isLoading, error } = useRetentionData();
 
+  const scaled = useMemo(() => {
+    if (!data) return null;
+    return {
+      kpis: getScaledKpis(data.kpis, period.days),
+      churnTrend: getScaledChurnTrend(data.churnTrend, period.days),
+      funnel: getScaledFunnel(data.funnel, period.days),
+      atRisk: getScaledAtRiskAccounts(data.accounts, period.days),
+    };
+  }, [data, period.days]);
+
+  if (isLoading || !data || !scaled) {
+    return (
+      <AppShell>
+        <div className="px-8 py-7 max-w-[1440px] mx-auto">
+          <div className="h-8 w-64 bg-muted animate-pulse rounded mb-6" />
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-px rounded-xl border border-border bg-border overflow-hidden mb-8">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-24 bg-card animate-pulse" />
+            ))}
+          </div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="h-64 bg-card border border-border rounded-xl animate-pulse" />
+              <div className="h-64 bg-card border border-border rounded-xl animate-pulse" />
+            </div>
+            <div className="h-96 bg-card border border-border rounded-xl animate-pulse" />
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppShell>
+        <div className="p-8 text-sm text-destructive">Failed to load retention data: {(error as Error).message}</div>
+      </AppShell>
+    );
+  }
+
+  const { kpis, churnTrend, funnel, atRisk } = scaled;
   const noSignals = atRisk.length === 0 && churnTrend.length <= 1;
 
   if (noSignals) {
@@ -67,13 +96,17 @@ export function RetentionDashboard() {
                 Live data
               </span>
               <span className="text-border">·</span>
-              <span>Synced 2 min ago</span>
+              <span>Synced from your database</span>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
             <PeriodSelector />
             <ExportReportDialog
+              accounts={data.accounts}
+              topDrivers={data.topDrivers}
+              kpis={kpis}
+              funnel={funnel}
               trigger={
                 <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground hover:bg-[#1D4ED8] shadow-xs text-[13px] font-medium transition-colors">
                   <Download className="size-3.5" />
@@ -97,20 +130,20 @@ export function RetentionDashboard() {
             <ChurnTrendChart data={churnTrend} />
             <ActivationFunnelChart data={funnel} />
             <div className="grid md:grid-cols-2 gap-6">
-              <InviteVsRetentionChart />
-              <TopDriversChart drivers={topDrivers} />
+              <InviteVsRetentionChart data={data.inviteVsRetention} />
+              <TopDriversChart drivers={data.topDrivers} />
             </div>
-            <AtRiskAccountsTable accounts={atRisk.length ? atRisk : []} />
+            <AtRiskAccountsTable accounts={atRisk} />
           </div>
 
           <aside className="space-y-6">
-            <AIInsightsPanel insights={aiInsights} />
-            <RecommendedInterventionsPanel interventions={recommendedInterventions} />
+            <AIInsightsPanel insights={data.aiInsights} />
+            <RecommendedInterventionsPanel interventions={data.recommendedInterventions} />
           </aside>
         </div>
 
         <div className="mt-8">
-          <UserQuotesStrip quotes={userQuotes} />
+          <UserQuotesStrip quotes={data.userQuotes} />
         </div>
       </div>
     </AppShell>
