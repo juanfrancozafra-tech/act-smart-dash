@@ -115,15 +115,22 @@ function SortHeader({ label, sortKey, active, align = "left", onToggle }: SortHe
 }
 
 export function AtRiskTable({ accounts }: { accounts: Account[] }) {
-  const [sort, setSort] = useState<SortState>(() => loadSort());
+  const [sort, setSort] = useState<SortState>({ key: "riskLevel", dir: "desc" });
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    setSort(loadSort());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sort));
     } catch {
       /* ignore */
     }
-  }, [sort]);
+  }, [sort, hydrated]);
 
   const sorted = useMemo(() => {
     // Default sort tuning: for name & lastActive, asc means most "natural" first
