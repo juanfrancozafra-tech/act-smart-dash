@@ -26,7 +26,6 @@ export function AccountDetailSkeleton() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Metrics */}
           <div className="grid sm:grid-cols-3 gap-4">
             {[0, 1, 2].map((i) => (
               <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
@@ -37,7 +36,6 @@ export function AccountDetailSkeleton() {
             ))}
           </div>
 
-          {/* Onboarding / activity timeline */}
           <div className="rounded-xl border border-border bg-card p-5 space-y-3">
             <div className="flex justify-between">
               <div className="space-y-2">
@@ -57,7 +55,6 @@ export function AccountDetailSkeleton() {
             </div>
           </div>
 
-          {/* Churn risk insights */}
           <div className="rounded-xl border border-border bg-card p-5 space-y-3">
             <Bar className="h-4 w-56" />
             {[0, 1, 2].map((i) => (
@@ -72,7 +69,6 @@ export function AccountDetailSkeleton() {
           </div>
         </div>
 
-        {/* Right rail: recommendations */}
         <aside className="space-y-6">
           <div className="rounded-xl border border-border bg-card p-5 space-y-3">
             <Bar className="h-4 w-40" />

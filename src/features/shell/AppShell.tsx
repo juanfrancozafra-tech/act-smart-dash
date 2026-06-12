@@ -6,13 +6,10 @@ import {
   TrendingUp,
   FlaskConical,
   Settings,
-  Download,
   Search,
   Bell,
   ChevronDown,
 } from "lucide-react";
-import { PeriodSelector } from "./PeriodSelector";
-import { ExportReportDialog } from "./ExportReportDialog";
 
 const navGroups = [
   {
@@ -38,7 +35,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full bg-background text-foreground">
-      {/* Sidebar — light, Stripe-style */}
       <aside className="hidden md:flex w-[232px] shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
         <div className="flex items-center gap-2.5 px-5 h-16">
           <div className="size-7 rounded-md bg-sidebar-primary grid place-items-center text-sidebar-primary-foreground font-bold text-[13px]">
@@ -92,7 +88,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
         <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 gap-4">
           <div className="flex items-center gap-2 text-[13px] min-w-0">
             <span className="text-muted-foreground">Customer Success</span>
@@ -126,5 +121,3 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-export { PeriodSelector, ExportReportDialog, Download };

@@ -10,9 +10,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { usePeriod } from "@/lib/period-context";
-import { getScaledKpis, getScaledFunnel } from "@/lib/retention-scaling";
-import { accounts, topDrivers } from "@/lib/retention-data";
+import { usePeriod } from "../data/periodContext";
+import { getScaledKpis, getScaledFunnel } from "../data/retentionScaling";
+import { accounts, topDrivers } from "../data/retentionData";
 
 type Format = "md" | "csv" | "xls";
 

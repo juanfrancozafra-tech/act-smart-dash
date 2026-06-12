@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, ChevronDown, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { usePeriod, type PeriodKey } from "@/lib/period-context";
+import { usePeriod, type PeriodKey } from "../data/periodContext";
 import { format, differenceInCalendarDays } from "date-fns";
 
 const PRESETS: { key: Exclude<PeriodKey, "custom">; label: string; days: number }[] = [
