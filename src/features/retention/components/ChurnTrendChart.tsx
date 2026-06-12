@@ -7,7 +7,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { churnTrend } from "../data/retentionData";
+import type { ChurnPoint } from "../data/retentionData";
 
 const tooltipStyle = {
   backgroundColor: "var(--surface-elevated)",
@@ -18,8 +18,8 @@ const tooltipStyle = {
   color: "var(--foreground)",
 };
 
-export function ChurnTrendChart({ data }: { data?: typeof churnTrend } = {}) {
-  const series = data ?? churnTrend;
+export function ChurnTrendChart({ data }: { data: ChurnPoint[] }) {
+  const series = data;
   const last = series[series.length - 1]?.churn ?? 0;
   return (
     <div className="rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:shadow-md hover:shadow-foreground/5">

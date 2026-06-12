@@ -7,7 +7,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { inviteVsRetention } from "../data/retentionData";
+import type { InviteCohort } from "../data/retentionData";
 
 const tooltipStyle = {
   backgroundColor: "var(--surface-elevated)",
@@ -18,12 +18,9 @@ const tooltipStyle = {
   color: "var(--foreground)",
 };
 
-/**
- * CollaborationPayoff — the headline chart contrasting accounts that
- * invited teammates against those that didn't. This is the visual answer
- * to the product's core hypothesis.
- */
-export function InviteVsRetentionChart() {
+export function InviteVsRetentionChart({ data }: { data: InviteCohort[] }) {
+  const withInvites = data.find((d) => /invite/i.test(d.cohort) && !/no/i.test(d.cohort));
+  const noInvites = data.find((d) => /no/i.test(d.cohort));
   return (
     <div className="rounded-xl border border-primary/30 bg-card p-5 relative overflow-hidden">
       <div className="absolute top-0 right-0 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider bg-primary text-primary-foreground rounded-bl-lg">
@@ -35,7 +32,7 @@ export function InviteVsRetentionChart() {
       </p>
       <div className="h-44 mt-4">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={inviteVsRetention} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
+          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
             <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} unit="%" />
             <YAxis dataKey="cohort" type="category" tick={{ fontSize: 12, fill: "var(--foreground)" }} axisLine={false} tickLine={false} width={100} />
@@ -47,11 +44,11 @@ export function InviteVsRetentionChart() {
       </div>
       <div className="grid grid-cols-2 gap-3 mt-3 text-xs">
         <div className="rounded-md bg-success/10 border border-success/20 p-2">
-          <div className="font-semibold text-success">With invites · 84% retained</div>
+          <div className="font-semibold text-success">With invites · {withInvites?.retained ?? 0}% retained</div>
           <div className="text-muted-foreground">670 accounts</div>
         </div>
         <div className="rounded-md bg-destructive/10 border border-destructive/20 p-2">
-          <div className="font-semibold text-destructive">No invites · 31% retained</div>
+          <div className="font-semibold text-destructive">No invites · {noInvites?.retained ?? 0}% retained</div>
           <div className="text-muted-foreground">330 accounts</div>
         </div>
       </div>

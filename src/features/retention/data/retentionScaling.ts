@@ -1,83 +1,44 @@
-import {
-  kpis as baseKpis,
-  churnTrend as baseChurnTrend,
-  activationFunnel as baseFunnel,
-  accounts,
-} from "./retentionData";
+import type { Account, ChurnPoint, FunnelStep, KpiBundle } from "./retentionData";
 
-// Deterministic scaling so the dashboard reacts to the period selector.
-// Shorter windows = less observed churn, more apparent retention.
 function factorForDays(days: number) {
-  const f = Math.min(1, Math.max(0.05, days / 90));
-  return f;
+  return Math.min(1, Math.max(0.05, days / 90));
 }
 
-export function getScaledKpis(days: number) {
+export function getScaledKpis(base: KpiBundle, days: number): KpiBundle {
   const f = factorForDays(days);
-  // churn rises monotonically over the cohort lifetime
-  const churn = +(baseKpis.churn90.value * f).toFixed(1);
+  const churn = +(base.churn90.value * f).toFixed(1);
   const retention = +(100 - churn).toFixed(1);
-  const activated = Math.round(20 + (baseKpis.activated.value - 20) * f);
-  const inviteRate = Math.round(45 + (baseKpis.inviteRate.value - 45) * f);
-  const health = Math.round(80 - (80 - baseKpis.health.value) * f);
-  // deltas scale subtly so the trend direction stays the same
+  const activated = Math.round(20 + (base.activated.value - 20) * f);
+  const inviteRate = Math.round(45 + (base.inviteRate.value - 45) * f);
+  const health = Math.round(80 - (80 - base.health.value) * f);
   const dscale = 0.5 + 0.5 * f;
   return {
-    retention90: {
-      ...baseKpis.retention90,
-      value: retention,
-      delta: +(baseKpis.retention90.delta * dscale).toFixed(1),
-    },
-    churn90: {
-      ...baseKpis.churn90,
-      value: churn,
-      delta: +(baseKpis.churn90.delta * dscale).toFixed(1),
-    },
-    activated: {
-      ...baseKpis.activated,
-      value: activated,
-      delta: +(baseKpis.activated.delta * dscale).toFixed(1),
-    },
-    inviteRate: {
-      ...baseKpis.inviteRate,
-      value: inviteRate,
-      delta: +(baseKpis.inviteRate.delta * dscale).toFixed(1),
-    },
-    health: {
-      ...baseKpis.health,
-      value: health,
-      delta: +(baseKpis.health.delta * dscale).toFixed(1),
-    },
+    retention90: { ...base.retention90, value: retention, delta: +(base.retention90.delta * dscale).toFixed(1) },
+    churn90: { ...base.churn90, value: churn, delta: +(base.churn90.delta * dscale).toFixed(1) },
+    activated: { ...base.activated, value: activated, delta: +(base.activated.delta * dscale).toFixed(1) },
+    inviteRate: { ...base.inviteRate, value: inviteRate, delta: +(base.inviteRate.delta * dscale).toFixed(1) },
+    health: { ...base.health, value: health, delta: +(base.health.delta * dscale).toFixed(1) },
   };
 }
 
-export function getScaledChurnTrend(days: number) {
+export function getScaledChurnTrend(base: ChurnPoint[], days: number): ChurnPoint[] {
   const weeks = Math.max(1, Math.min(12, Math.ceil(days / 7)));
-  return baseChurnTrend.slice(0, weeks);
+  return base.slice(0, weeks);
 }
 
-export function getScaledFunnel(days: number) {
+export function getScaledFunnel(base: FunnelStep[], days: number): FunnelStep[] {
   const f = factorForDays(days);
-  // Late funnel stages haven't fully matured in shorter windows.
   const weights = [1, 1, 0.92 + 0.08 * f, 0.6 + 0.4 * f, 0.25 + 0.75 * f];
-  return baseFunnel.map((s, i) => {
-    const pct = Math.round(s.pct * weights[i]);
-    const count = Math.round(s.count * weights[i]);
-    return { ...s, pct, count };
-  });
+  return base.map((s, i) => ({ ...s, pct: Math.round(s.pct * weights[i]), count: Math.round(s.count * weights[i]) }));
 }
 
-export function getScaledAtRiskAccounts(days: number) {
-  return accounts.filter((a) => a.daysSinceSignup <= days || days >= 90);
+export function getScaledAtRiskAccounts(base: Account[], days: number): Account[] {
+  return base.filter((a) => a.daysSinceSignup <= days || days >= 90);
 }
 
-export interface KpiInfo {
-  calculation: string;
-  why: string;
-  recommendation?: string;
-}
+export interface KpiInfo { calculation: string; why: string; recommendation?: string }
 
-export const kpiInfo: Record<keyof ReturnType<typeof getScaledKpis>, KpiInfo> = {
+export const kpiInfo: Record<keyof KpiBundle, KpiInfo> = {
   retention90: {
     calculation: "Accounts still active at day N ÷ total signups in the cohort.",
     why: "Retention is the single best proxy for product-market fit in B2B SaaS.",

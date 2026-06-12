@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { RetentionDashboard } from "@/features/retention/components/RetentionDashboard";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Retention Dashboard · Retain" },

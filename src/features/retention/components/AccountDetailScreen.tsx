@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -16,28 +16,26 @@ import { HealthGauge } from "./HealthGauge";
 import { AccountDetailSkeleton } from "./AccountDetailSkeleton";
 import { AccountEmptyState } from "./AccountEmptyState";
 import { InterventionComposer, type InterventionStep } from "./InterventionComposer";
-import { recommendedInterventions, type Account } from "../data/retentionData";
+import { useAccount, useRetentionData } from "../data/retentionData";
 
-/**
- * AccountDetailScreen — the intervention surface. Designed so a user can
- * go from "this account looks bad" to "intervention sent" in <30 seconds.
- */
-export function AccountDetailScreen({ account }: { account: Account }) {
+export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const [step, setStep] = useState<InterventionStep>("idle");
+  const { data: account, isLoading } = useAccount(accountId);
+  const { data: retention } = useRetentionData();
+  const recommendedInterventions = retention?.recommendedInterventions ?? [];
 
-  // Simulate the brief client-side fetch every time the user lands on a client
-  // detail page — the skeleton tracks the real loading window.
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => setLoading(false), 750);
-    return () => clearTimeout(t);
-  }, [account.id]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <AppShell>
         <AccountDetailSkeleton />
+      </AppShell>
+    );
+  }
+
+  if (!account) {
+    return (
+      <AppShell>
+        <div className="p-8 text-sm text-muted-foreground">Account not found.</div>
       </AppShell>
     );
   }
@@ -110,27 +108,9 @@ export function AccountDetailScreen({ account }: { account: Account }) {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="grid sm:grid-cols-3 gap-4">
-              <Metric
-                icon={Users}
-                label="Team activity"
-                value={`${account.weeklyActiveUsers}/${account.seats}`}
-                hint="weekly active users"
-                tone={account.weeklyActiveUsers < 3 ? "bad" : "ok"}
-              />
-              <Metric
-                icon={Mail}
-                label="Invitations sent"
-                value={`${account.invitedSeats}/${account.seats}`}
-                hint={account.invitedSeats < 3 ? "below 3-invite threshold" : "healthy"}
-                tone={account.invitedSeats < 3 ? "bad" : "ok"}
-              />
-              <Metric
-                icon={TrendingUp}
-                label="Features adopted"
-                value={`${account.featuresAdopted}/${account.featuresTotal}`}
-                hint={`${Math.round((account.featuresAdopted / account.featuresTotal) * 100)}% of core surface`}
-                tone={account.featuresAdopted < 4 ? "warn" : "ok"}
-              />
+              <Metric icon={Users} label="Team activity" value={`${account.weeklyActiveUsers}/${account.seats}`} hint="weekly active users" tone={account.weeklyActiveUsers < 3 ? "bad" : "ok"} />
+              <Metric icon={Mail} label="Invitations sent" value={`${account.invitedSeats}/${account.seats}`} hint={account.invitedSeats < 3 ? "below 3-invite threshold" : "healthy"} tone={account.invitedSeats < 3 ? "bad" : "ok"} />
+              <Metric icon={TrendingUp} label="Features adopted" value={`${account.featuresAdopted}/${account.featuresTotal}`} hint={`${Math.round((account.featuresAdopted / account.featuresTotal) * 100)}% of core surface`} tone={account.featuresAdopted < 4 ? "warn" : "ok"} />
             </div>
 
             <div className="rounded-xl border border-border bg-card p-5">
@@ -142,19 +122,12 @@ export function AccountDetailScreen({ account }: { account: Account }) {
                 <div className="text-xs text-muted-foreground">Day {account.daysSinceSignup} of 90</div>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden mb-4">
-                <div
-                  className="h-full bg-primary rounded-full"
-                  style={{ width: `${account.onboardingCompletion}%` }}
-                />
+                <div className="h-full bg-primary rounded-full" style={{ width: `${account.onboardingCompletion}%` }} />
               </div>
               <ol className="space-y-2">
                 {onboardingSteps.map((s) => (
                   <li key={s.label} className="flex items-center gap-2 text-sm">
-                    {s.done ? (
-                      <CheckCircle2 className="size-4 text-success" />
-                    ) : (
-                      <Circle className="size-4 text-muted-foreground" />
-                    )}
+                    {s.done ? <CheckCircle2 className="size-4 text-success" /> : <Circle className="size-4 text-muted-foreground" />}
                     <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
                   </li>
                 ))}
@@ -169,45 +142,29 @@ export function AccountDetailScreen({ account }: { account: Account }) {
               <ul className="space-y-2.5 text-sm">
                 <li className="flex gap-3">
                   <span className="size-5 grid place-items-center rounded-full bg-destructive/15 text-destructive text-xs font-bold shrink-0">1</span>
-                  <span>
-                    <strong>Solo usage pattern.</strong> {account.invitedSeats} of {account.seats} seats invited —
-                    solo accounts churn at 69% vs 16% for teams.
-                  </span>
+                  <span><strong>Solo usage pattern.</strong> {account.invitedSeats} of {account.seats} seats invited — solo accounts churn at 69% vs 16% for teams.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="size-5 grid place-items-center rounded-full bg-warning/30 text-warning-foreground text-xs font-bold shrink-0">2</span>
-                  <span>
-                    <strong>Engagement collapse.</strong> Active sessions dropped from 12/wk to 1/wk in the last 14 days.
-                  </span>
+                  <span><strong>Engagement collapse.</strong> Active sessions dropped from 12/wk to 1/wk in the last 14 days.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="size-5 grid place-items-center rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">3</span>
-                  <span>
-                    <strong>Stalled activation.</strong> Reached only {account.featuresAdopted} of {account.featuresTotal} core
-                    features — typically a leading indicator 18 days before churn.
-                  </span>
+                  <span><strong>Stalled activation.</strong> Reached only {account.featuresAdopted} of {account.featuresTotal} core features — typically a leading indicator 18 days before churn.</span>
                 </li>
               </ul>
             </div>
           </div>
 
           <aside className="space-y-6">
-            <InterventionComposer
-              step={step}
-              setStep={setStep}
-              accountName={account.name}
-              seats={account.seats - account.invitedSeats}
-            />
+            <InterventionComposer step={step} setStep={setStep} accountId={account.id} accountName={account.name} seats={account.seats - account.invitedSeats} />
 
             <div className="rounded-xl border border-border bg-card p-5">
               <h3 className="text-sm font-semibold">Other interventions</h3>
               <p className="text-xs text-muted-foreground mt-0.5 mb-3">Ranked by projected impact</p>
               <div className="space-y-2">
                 {recommendedInterventions.slice(1).map((it) => (
-                  <button
-                    key={it.name}
-                    className="w-full flex items-center justify-between rounded-lg border border-border bg-surface hover:border-primary hover:bg-primary/5 transition-colors px-3 py-2.5 text-left"
-                  >
+                  <button key={it.name} className="w-full flex items-center justify-between rounded-lg border border-border bg-surface hover:border-primary hover:bg-primary/5 transition-colors px-3 py-2.5 text-left">
                     <div>
                       <div className="text-sm font-medium">{it.name}</div>
                       <div className="text-xs text-muted-foreground">{it.time} · {it.impact}</div>
@@ -223,26 +180,11 @@ export function AccountDetailScreen({ account }: { account: Account }) {
   );
 }
 
-function Metric({
-  icon: Icon,
-  label,
-  value,
-  hint,
-  tone,
-}: {
-  icon: any;
-  label: string;
-  value: string;
-  hint: string;
-  tone: "ok" | "warn" | "bad";
-}) {
-  const toneColor =
-    tone === "bad" ? "text-destructive" : tone === "warn" ? "text-warning-foreground" : "text-success";
+function Metric({ icon: Icon, label, value, hint, tone }: { icon: any; label: string; value: string; hint: string; tone: "ok" | "warn" | "bad" }) {
+  const toneColor = tone === "bad" ? "text-destructive" : tone === "warn" ? "text-warning-foreground" : "text-success";
   return (
     <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Icon className="size-3.5" /> {label}
-      </div>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground"><Icon className="size-3.5" /> {label}</div>
       <div className="text-2xl font-semibold mt-1 tabular-nums">{value}</div>
       <div className={`text-xs mt-1 ${toneColor}`}>{hint}</div>
     </div>
