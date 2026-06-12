@@ -3,7 +3,7 @@ import {
   churnTrend as baseChurnTrend,
   activationFunnel as baseFunnel,
   accounts,
-} from "./retention-data";
+} from "./retentionData";
 
 // Deterministic scaling so the dashboard reacts to the period selector.
 // Shorter windows = less observed churn, more apparent retention.
