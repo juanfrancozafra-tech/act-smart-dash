@@ -59,7 +59,7 @@ The intervention surface. Designed so a user can go from "this account looks bad
 
 ### What we optimized for
 - **Speed of comprehension over completeness.** Every screen has one job. The dashboard answers *"who is at risk and why?"*; the detail page answers *"what do I do about it?"*.
-- **Clickable end-to-end over real backend.** This is a validation prototype, not a product. All data is mocked in `src/lib/retention-data.ts` so the entire flow works from a single shareable link with zero setup.
+- **Clickable end-to-end over real backend.** This is a validation prototype, not a product. All data is mocked in `src/features/retention/data/retentionData.ts` so the entire flow works from a single shareable link with zero setup.
 - **One distinctive visual direction.** Custom Inter-based theme with semantic risk tokens (High / Medium / Low) in OKLCH, rather than generic SaaS purple-on-white.
 
 ### Stack
@@ -69,22 +69,73 @@ The intervention surface. Designed so a user can go from "this account looks bad
 - **Tailwind v4** via `src/styles.css` using native `@import` + theme variables (no legacy `tailwind.config.js`).
 - **No database, no auth.** Intentional — the prototype must open instantly from a link with no friction.
 
-### File map
+### Project structure
+
+The codebase is grouped **by feature, not by type**. Each feature owns its
+display components and its data layer side-by-side, and routes are kept
+deliberately thin — they only declare URL, metadata, and the loader.
+
 ```
 src/
-  routes/
-    __root.tsx              # shell + providers
-    index.tsx               # retention dashboard
-    accounts.$id.tsx        # account detail + intervention flow
-  components/retention/
-    AppShell.tsx            # nav + layout chrome
-    KpiCard.tsx             # dashboard KPI tiles
-    Charts.tsx              # churn curve, funnel, invite-vs-retention, HealthGauge
-    Panels.tsx              # at-risk table, insights, intervention panel
-  lib/
-    retention-data.ts       # mocked accounts, KPIs, trends, drivers
-  styles.css                # theme tokens (incl. risk palette)
+  routes/                                  # thin TanStack Start route files
+    __root.tsx                             # shell, providers, head() defaults
+    index.tsx                              # /              → <RetentionDashboard />
+    accounts.$id.tsx                       # /accounts/$id  → <AccountDetailScreen />
+
+  features/
+    retention/
+      data/                                # pure TypeScript — no JSX, no React
+        retentionData.ts                   # mocked accounts, KPIs, drivers, quotes
+        retentionScaling.ts                # deterministic scaling for period selector
+        periodContext.tsx                  # React context for the time-range selector
+
+      components/                          # display components (one per file)
+        RetentionDashboard.tsx             # top-level dashboard screen
+        AccountDetailScreen.tsx            # top-level account detail screen
+        InterventionComposer.tsx           # idle → compose → sent flow
+        AtRiskAccountsTable.tsx            # sortable, animated risk table
+        AIInsightsPanel.tsx
+        RecommendedInterventionsPanel.tsx
+        UserQuotesStrip.tsx
+        ChurnTrendChart.tsx
+        ActivationFunnelChart.tsx
+        InviteVsRetentionChart.tsx         # the "collaboration payoff" chart
+        TopDriversChart.tsx
+        HealthGauge.tsx
+        KpiCard.tsx
+        PeriodSelector.tsx
+        ExportReportDialog.tsx
+        DashboardEmptyState.tsx
+        AccountEmptyState.tsx
+        AccountDetailSkeleton.tsx
+
+    shell/                                 # cross-feature app chrome
+      AppShell.tsx                         # sidebar + topbar layout wrapper
+
+  components/ui/                           # shadcn primitives (do not rename)
+  hooks/                                   # generic React hooks
+  lib/                                     # framework utilities (cn, error reporting, …)
+  styles.css                               # theme tokens (incl. risk palette)
 ```
+
+### Conventions
+
+- **Naming.** Components are named for what the user sees, not for their
+  shape: `RetentionDashboard`, `AccountDetailScreen`, `InterventionComposer`,
+  `AtRiskAccountsTable`. Avoid generic names like `Panels`, `Charts`, `Utils`.
+- **Data vs. display.** Files under `features/<name>/data/` are pure
+  TypeScript — no JSX, no `useState`. Display components import data via
+  relative paths within their feature; cross-feature imports go through
+  `@/features/<other>/...`.
+- **Routes are thin.** Route files only declare the URL, `head()` metadata,
+  and the loader. The screen component lives in `features/<name>/components/`.
+- **Where to add a new file.**
+  - New screen or panel for an existing feature → `features/<name>/components/`
+  - New mock data, scaling, or context for an existing feature → `features/<name>/data/`
+  - New shadcn primitive → `components/ui/` (treat as vendored)
+  - New cross-cutting hook → `hooks/`
+  - New cross-cutting utility (formatter, error reporter, etc.) → `lib/`
+
 
 ### Explicitly out of scope
 - Real telemetry / data pipeline
