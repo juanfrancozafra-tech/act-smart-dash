@@ -16,13 +16,23 @@ import { HealthGauge } from "./HealthGauge";
 import { AccountDetailSkeleton } from "./AccountDetailSkeleton";
 import { AccountEmptyState } from "./AccountEmptyState";
 import { InterventionComposer, type InterventionStep } from "./InterventionComposer";
-import { useAccount, useRetentionData } from "../data/retentionData";
+import {
+  useAccount,
+  useRetentionData,
+  useAccountOnboarding,
+  useAccountRiskSignals,
+  useCohortSummary,
+} from "../data/retentionData";
 
 export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const [step, setStep] = useState<InterventionStep>("idle");
   const { data: account, isLoading } = useAccount(accountId);
   const { data: retention } = useRetentionData();
+  const { data: onboardingSteps } = useAccountOnboarding(accountId);
+  const { data: riskSignals } = useAccountRiskSignals(accountId);
+  const { data: cohortSummary } = useCohortSummary();
   const recommendedInterventions = retention?.recommendedInterventions ?? [];
+  const windowDays = cohortSummary?.cohort?.windowDays ?? 90;
 
   if (isLoading) {
     return (
@@ -53,13 +63,16 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
     );
   }
 
-  const onboardingSteps = [
-    { label: "Workspace created", done: true },
-    { label: "Profile completed", done: true },
-    { label: "First data source connected", done: account.onboardingCompletion > 50 },
-    { label: "Team invitations sent", done: account.invitedSeats >= 3 },
-    { label: "First report shared", done: false },
-  ];
+  const onboardingStepsList =
+    onboardingSteps && onboardingSteps.length > 0
+      ? onboardingSteps.map((s) => ({ label: s.label, done: s.done }))
+      : [
+          { label: "Workspace created", done: true },
+          { label: "Profile completed", done: true },
+          { label: "First data source connected", done: account.onboardingCompletion > 50 },
+          { label: "Team invitations sent", done: account.invitedSeats >= 3 },
+          { label: "First report shared", done: false },
+        ];
 
   return (
     <AppShell>
