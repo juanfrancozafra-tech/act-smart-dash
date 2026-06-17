@@ -73,8 +73,16 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
         const { data: userData } = await supabase.auth.getUser();
         if (!userData.user) throw new Error("Not signed in");
         const path = `${userData.user.id}/${filename}`;
-        const { error } = await supabase.storage.from("reports").upload(path, blob, { contentType: fmt.mime, upsert: false });
-        if (error) throw error;
+        const { error: uploadError } = await supabase.storage.from("reports").upload(path, blob, { contentType: fmt.mime, upsert: false });
+        if (uploadError) throw uploadError;
+        const { error: metaError } = await supabase.from("exports").insert({
+          created_by: userData.user.id,
+          period_label: period.label,
+          storage_path: path,
+          format: format,
+          size_bytes: blob.size,
+        });
+        if (metaError) throw metaError;
         toast.success("Report downloaded and saved to your reports.");
       } else {
         toast.success("Report downloaded.");
