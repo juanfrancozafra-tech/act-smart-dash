@@ -113,19 +113,22 @@ export function RetentionDashboard() {
 
           <div className="flex items-center gap-2 shrink-0">
             <PeriodSelector />
-            <ExportReportDialog
-              accounts={data.accounts}
-              topDrivers={data.topDrivers}
-              kpis={kpis}
-              funnel={funnel}
-              trigger={
-                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground hover:bg-[#1D4ED8] shadow-xs text-[13px] font-medium transition-colors">
-                  <Download className="size-3.5" />
-                  Export
-                </button>
-              }
-            />
+            {canWrite && (
+              <ExportReportDialog
+                accounts={data.accounts}
+                topDrivers={data.topDrivers}
+                kpis={kpis}
+                funnel={funnel}
+                trigger={
+                  <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground hover:bg-[#1D4ED8] shadow-xs text-[13px] font-medium transition-colors">
+                    <Download className="size-3.5" />
+                    Export
+                  </button>
+                }
+              />
+            )}
           </div>
+
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-px rounded-xl border border-border bg-border overflow-hidden mb-8">
