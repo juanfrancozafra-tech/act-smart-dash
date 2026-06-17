@@ -156,6 +156,11 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
           </section>
         </div>
 
+        {exportError && (
+          <p role="alert" className="text-[12px] text-destructive leading-snug">
+            {exportError}
+          </p>
+        )}
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}><X className="size-4" /> Cancel</Button>
           <Button onClick={download} disabled={busy}><Download className="size-4" /> {busy ? "Working…" : "Download report"}</Button>
