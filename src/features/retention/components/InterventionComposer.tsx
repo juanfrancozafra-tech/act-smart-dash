@@ -40,16 +40,13 @@ export function InterventionComposer({
       if (error) throw error;
       setStep("sent");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to send";
-      if (/row-level security/i.test(msg)) {
-        toast.error("Only admins and CSMs can send interventions. Ask an admin to grant you the CSM role.");
-      } else {
-        toast.error(msg);
-      }
+      if (notifyIfRlsError(err)) return;
+      toast.error(err instanceof Error ? err.message : "Failed to send");
     } finally {
       setSending(false);
     }
   };
+
 
   return (
     <div className="rounded-xl border border-primary/40 bg-card p-5 ring-1 ring-primary/15">
