@@ -1,7 +1,31 @@
 import { Link } from "@tanstack/react-router";
-import { Database, UsersRound, Rocket, Clock, Plug } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
+import { Database, UsersRound, Rocket, Clock, Plug, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { useCurrentRole } from "@/hooks/useCurrentRole";
+import { seedDemoData } from "@/lib/seed.functions";
 
 export function DashboardEmptyState() {
+  const { isAdmin } = useCurrentRole();
+  const seed = useServerFn(seedDemoData);
+  const queryClient = useQueryClient();
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const result = await seed();
+      toast.success(`Seeded ${result.inserted} demo accounts.`);
+      queryClient.invalidateQueries({ queryKey: ["retention-data"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Seeding failed");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const suggestions = [
     {
       icon: Plug,
@@ -44,6 +68,15 @@ export function DashboardEmptyState() {
           >
             View example dashboard
           </Link>
+          {isAdmin && (
+            <button
+              onClick={handleSeed}
+              disabled={seeding}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-primary/40 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+            >
+              <Sparkles className="size-4" /> {seeding ? "Seeding…" : "Seed demo data"}
+            </button>
+          )}
         </div>
       </div>
 
