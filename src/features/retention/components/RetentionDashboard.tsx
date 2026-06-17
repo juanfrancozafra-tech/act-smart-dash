@@ -13,7 +13,7 @@ import { AIInsightsPanel } from "./AIInsightsPanel";
 import { RecommendedInterventionsPanel } from "./RecommendedInterventionsPanel";
 import { UserQuotesStrip } from "./UserQuotesStrip";
 import { DashboardEmptyState } from "./DashboardEmptyState";
-import { useRetentionData } from "../data/retentionData";
+import { useRetentionData, useKpiDefinitions, type KpiDefinition } from "../data/retentionData";
 import { usePeriod } from "../data/periodContext";
 import {
   getScaledKpis,
@@ -23,9 +23,16 @@ import {
   kpiInfo,
 } from "../data/retentionScaling";
 
+function infoFor(key: string, defs: Record<string, KpiDefinition> | undefined) {
+  const d = defs?.[key];
+  if (d) return { calculation: d.calculation, why: d.why, recommendation: d.recommendation ?? undefined };
+  return kpiInfo[key as keyof typeof kpiInfo];
+}
+
 export function RetentionDashboard() {
   const { period } = usePeriod();
   const { data, isLoading, error } = useRetentionData();
+  const { data: kpiDefs } = useKpiDefinitions();
 
   const scaled = useMemo(() => {
     if (!data) return null;
@@ -87,7 +94,7 @@ export function RetentionDashboard() {
               Account Health
             </h1>
             <p className="text-sm text-muted-foreground mt-1.5 max-w-2xl">
-              {period.label.toLowerCase()} · Q2 2026 cohort. {kpis.churn90.value}% of accounts
+              {period.label.toLowerCase()} · {data.cohort?.label ?? "current"} cohort. {kpis.churn90.value}% of accounts
               churn within this window — trace where they drop off and act on it below.
             </p>
             <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -118,11 +125,11 @@ export function RetentionDashboard() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-px rounded-xl border border-border bg-border overflow-hidden mb-8">
-          <KpiCard {...kpis.retention90} info={kpiInfo.retention90} variant="bare" />
-          <KpiCard {...kpis.churn90} info={kpiInfo.churn90} variant="bare" />
-          <KpiCard {...kpis.activated} info={kpiInfo.activated} variant="bare" />
-          <KpiCard {...kpis.inviteRate} info={kpiInfo.inviteRate} highlight variant="bare" />
-          <KpiCard {...kpis.health} info={kpiInfo.health} variant="bare" />
+          <KpiCard {...kpis.retention90} info={infoFor("retention90", kpiDefs)} variant="bare" />
+          <KpiCard {...kpis.churn90} info={infoFor("churn90", kpiDefs)} variant="bare" />
+          <KpiCard {...kpis.activated} info={infoFor("activated", kpiDefs)} variant="bare" />
+          <KpiCard {...kpis.inviteRate} info={infoFor("inviteRate", kpiDefs)} highlight variant="bare" />
+          <KpiCard {...kpis.health} info={infoFor("health", kpiDefs)} variant="bare" />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
