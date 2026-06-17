@@ -14,25 +14,7 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const navGroups = [
-  {
-    label: "Analyze",
-    items: [
-      { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
-      { to: "/retention", label: "Retention", icon: TrendingUp },
-      { to: "/experiments", label: "Experiments", icon: FlaskConical },
-    ],
-  },
-  {
-    label: "Manage",
-    items: [
-      { to: "/accounts/acme-inc", label: "Accounts", icon: Building2 },
-      { to: "/users", label: "Users", icon: Users },
-      { to: "/settings", label: "Settings", icon: Settings },
-    ],
-  },
-];
+import { useCohortSummary, useFirstAccountId } from "@/features/retention/data/retentionData";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -40,6 +22,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [initials, setInitials] = useState("·");
   const [menuOpen, setMenuOpen] = useState(false);
+  const { data: cohortSummary } = useCohortSummary();
+  const { data: firstAccountId } = useFirstAccountId();
+
+  const navGroups = [
+    {
+      label: "Analyze",
+      items: [
+        { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
+        { to: "/retention", label: "Retention", icon: TrendingUp },
+        { to: "/experiments", label: "Experiments", icon: FlaskConical },
+      ],
+    },
+    {
+      label: "Manage",
+      items: [
+        { to: firstAccountId ? `/accounts/${firstAccountId}` : "/", label: "Accounts", icon: Building2 },
+        { to: "/users", label: "Users", icon: Users },
+        { to: "/settings", label: "Settings", icon: Settings },
+      ],
+    },
+  ];
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -87,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   return (
                     <Link
                       key={item.label}
-                      to={item.to}
+                      to={item.to as string}
                       className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
                         active
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -105,8 +108,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="mx-3 mb-3 rounded-lg border border-sidebar-border bg-sidebar-accent/50 p-3">
-          <div className="text-[11px] font-semibold text-foreground">Q2 2026 cohort</div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">1,000 signups tracked</div>
+          <div className="text-[11px] font-semibold text-foreground">
+            {cohortSummary?.cohort?.label ?? "—"} cohort
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            {(cohortSummary?.signupCount ?? 0).toLocaleString()} signups tracked
+            {cohortSummary?.cohort?.windowDays ? ` · ${cohortSummary.cohort.windowDays}-day window` : ""}
+          </div>
           <button className="mt-2 text-[11px] font-medium text-primary hover:text-primary/80">
             Switch cohort →
           </button>

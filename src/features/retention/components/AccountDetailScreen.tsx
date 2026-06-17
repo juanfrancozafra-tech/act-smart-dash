@@ -16,13 +16,23 @@ import { HealthGauge } from "./HealthGauge";
 import { AccountDetailSkeleton } from "./AccountDetailSkeleton";
 import { AccountEmptyState } from "./AccountEmptyState";
 import { InterventionComposer, type InterventionStep } from "./InterventionComposer";
-import { useAccount, useRetentionData } from "../data/retentionData";
+import {
+  useAccount,
+  useRetentionData,
+  useAccountOnboarding,
+  useAccountRiskSignals,
+  useCohortSummary,
+} from "../data/retentionData";
 
 export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const [step, setStep] = useState<InterventionStep>("idle");
   const { data: account, isLoading } = useAccount(accountId);
   const { data: retention } = useRetentionData();
+  const { data: onboardingSteps } = useAccountOnboarding(accountId);
+  const { data: riskSignals } = useAccountRiskSignals(accountId);
+  const { data: cohortSummary } = useCohortSummary();
   const recommendedInterventions = retention?.recommendedInterventions ?? [];
+  const windowDays = cohortSummary?.cohort?.windowDays ?? 90;
 
   if (isLoading) {
     return (
@@ -53,13 +63,16 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
     );
   }
 
-  const onboardingSteps = [
-    { label: "Workspace created", done: true },
-    { label: "Profile completed", done: true },
-    { label: "First data source connected", done: account.onboardingCompletion > 50 },
-    { label: "Team invitations sent", done: account.invitedSeats >= 3 },
-    { label: "First report shared", done: false },
-  ];
+  const onboardingStepsList =
+    onboardingSteps && onboardingSteps.length > 0
+      ? onboardingSteps.map((s) => ({ label: s.label, done: s.done }))
+      : [
+          { label: "Workspace created", done: true },
+          { label: "Profile completed", done: true },
+          { label: "First data source connected", done: account.onboardingCompletion > 50 },
+          { label: "Team invitations sent", done: account.invitedSeats >= 3 },
+          { label: "First report shared", done: false },
+        ];
 
   return (
     <AppShell>
@@ -119,13 +132,13 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
                   <h3 className="text-sm font-semibold">Onboarding progress</h3>
                   <p className="text-xs text-muted-foreground">{account.onboardingCompletion}% complete</p>
                 </div>
-                <div className="text-xs text-muted-foreground">Day {account.daysSinceSignup} of 90</div>
+                <div className="text-xs text-muted-foreground">Day {account.daysSinceSignup} of {windowDays}</div>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden mb-4">
                 <div className="h-full bg-primary rounded-full" style={{ width: `${account.onboardingCompletion}%` }} />
               </div>
               <ol className="space-y-2">
-                {onboardingSteps.map((s) => (
+                {onboardingStepsList.map((s) => (
                   <li key={s.label} className="flex items-center gap-2 text-sm">
                     {s.done ? <CheckCircle2 className="size-4 text-success" /> : <Circle className="size-4 text-muted-foreground" />}
                     <span className={s.done ? "" : "text-muted-foreground"}>{s.label}</span>
@@ -140,18 +153,27 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
                 <h3 className="text-sm font-semibold">Why this account is likely to churn</h3>
               </div>
               <ul className="space-y-2.5 text-sm">
-                <li className="flex gap-3">
-                  <span className="size-5 grid place-items-center rounded-full bg-destructive/15 text-destructive text-xs font-bold shrink-0">1</span>
-                  <span><strong>Solo usage pattern.</strong> {account.invitedSeats} of {account.seats} seats invited — solo accounts churn at 69% vs 16% for teams.</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="size-5 grid place-items-center rounded-full bg-warning/30 text-warning-foreground text-xs font-bold shrink-0">2</span>
-                  <span><strong>Engagement collapse.</strong> Active sessions dropped from 12/wk to 1/wk in the last 14 days.</span>
-                </li>
-                <li className="flex gap-3">
-                  <span className="size-5 grid place-items-center rounded-full bg-primary/15 text-primary text-xs font-bold shrink-0">3</span>
-                  <span><strong>Stalled activation.</strong> Reached only {account.featuresAdopted} of {account.featuresTotal} core features — typically a leading indicator 18 days before churn.</span>
-                </li>
+                {(riskSignals && riskSignals.length > 0
+                  ? riskSignals
+                  : [
+                      { id: "f1", rank: 1, title: "Solo usage pattern", body: `${account.invitedSeats} of ${account.seats} seats invited — solo accounts churn at 69% vs 16% for teams.`, severity: "critical" as const },
+                      { id: "f2", rank: 2, title: "Engagement collapse", body: "Active sessions dropped from 12/wk to 1/wk in the last 14 days.", severity: "warning" as const },
+                      { id: "f3", rank: 3, title: "Stalled activation", body: `Reached only ${account.featuresAdopted} of ${account.featuresTotal} core features — typically a leading indicator 18 days before churn.`, severity: "info" as const },
+                    ]
+                ).map((s) => {
+                  const badge =
+                    s.severity === "critical"
+                      ? "bg-destructive/15 text-destructive"
+                      : s.severity === "warning"
+                      ? "bg-warning/30 text-warning-foreground"
+                      : "bg-primary/15 text-primary";
+                  return (
+                    <li key={s.id} className="flex gap-3">
+                      <span className={`size-5 grid place-items-center rounded-full text-xs font-bold shrink-0 ${badge}`}>{s.rank}</span>
+                      <span><strong>{s.title}.</strong> {s.body}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
