@@ -116,10 +116,14 @@ src/
       AppShell.tsx                         # sidebar + topbar layout wrapper
 
   components/ui/                           # shadcn primitives (do not rename)
-  hooks/                                   # generic React hooks
-  lib/                                     # framework utilities (cn, error reporting, …)
+  components/ErrorBoundary.tsx             # global render-error boundary
+  components/ErrorRetryCard.tsx            # shared retry card (queries + boundary)
+  components/OfflineBanner.tsx             # active connectivity probe, auto-dismiss
+  hooks/                                   # generic React hooks (incl. useCurrentRole)
+  lib/                                     # framework utilities (cn, handleAuthError, rlsToast, …)
   styles.css                               # theme tokens (incl. risk palette)
 ```
+
 
 ### Conventions
 
