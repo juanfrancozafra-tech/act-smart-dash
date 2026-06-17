@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   return (
                     <Link
                       key={item.label}
-                      to={item.to}
+                      to={item.to as string}
                       className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
                         active
                           ? "bg-sidebar-accent text-sidebar-accent-foreground"
