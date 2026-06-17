@@ -120,8 +120,16 @@
 | Global render-error recovery | `components/ErrorBoundary.tsx` + `ErrorRetryCard.tsx` | Uncaught render errors and query errors share one retry card. Retry calls `queryClient.invalidateQueries(...)`. |
 | Offline handling | `components/OfflineBanner.tsx` | Probes `/?offlineProbe=…` instead of trusting `navigator.onLine`; auto-dismisses when the network returns. |
 
+### Target schema (when you flip the switch — guidance, not code)
+- `accounts(id, name, industry, csm_id, arr, seats, invited_seats, created_at)`
+- `events(id, account_id, user_id, type, ts, props jsonb)` — append-only product events
+- `health_scores(account_id, ts, score, risk_tier, weights_version)` — daily snapshot
+- `churn_drivers(account_id, ts, driver_key, weight)` — ranked per account
+- `interventions(id, account_id, template_key, body, sent_by, sent_at, channel)` — RLS live today
+- `intervention_outcomes(intervention_id, retained_30d boolean, retained_90d boolean, measured_at)`
+- `user_roles(user_id, role app_role)` — live today; queried via `has_role(uid, role)`
 
-RLS on every table scoped by `org_id` (add to all tables). Reads via `createServerFn` with `requireSupabaseAuth`. Writes via server fns; webhooks under `/api/public/*` with HMAC verification.
+RLS on every table scoped by `org_id` (add to all write tables alongside the existing role-based policies). Reads via `createServerFn` with `requireSupabaseAuth`. Writes via server fns; webhooks under `/api/public/*` with HMAC verification.
 
 ---
 
