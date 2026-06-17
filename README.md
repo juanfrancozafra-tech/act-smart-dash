@@ -78,9 +78,12 @@ deliberately thin — they only declare URL, metadata, and the loader.
 ```
 src/
   routes/                                  # thin TanStack Start route files
-    __root.tsx                             # shell, providers, head() defaults
+    __root.tsx                             # shell, providers, ErrorBoundary, OfflineBanner, auth listener
     index.tsx                              # /              → <RetentionDashboard />
     accounts.$id.tsx                       # /accounts/$id  → <AccountDetailScreen />
+    auth.tsx                               # /auth          → email/password + Google + forgot-password
+    reset-password.tsx                     # /reset-password (recovery flow)
+    _authenticated/route.tsx               # pathless auth gate
 
   features/
     retention/
