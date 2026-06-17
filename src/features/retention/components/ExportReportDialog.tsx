@@ -14,6 +14,8 @@ import { usePeriod } from "../data/periodContext";
 import type { Account, Driver, FunnelStep, KpiBundle } from "../data/retentionData";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { notifyIfRlsError } from "@/lib/rlsToast";
+
 
 type Format = "md" | "csv" | "xls";
 
