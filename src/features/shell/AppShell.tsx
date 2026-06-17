@@ -14,25 +14,7 @@ import {
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const navGroups = [
-  {
-    label: "Analyze",
-    items: [
-      { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
-      { to: "/retention", label: "Retention", icon: TrendingUp },
-      { to: "/experiments", label: "Experiments", icon: FlaskConical },
-    ],
-  },
-  {
-    label: "Manage",
-    items: [
-      { to: "/accounts/acme-inc", label: "Accounts", icon: Building2 },
-      { to: "/users", label: "Users", icon: Users },
-      { to: "/settings", label: "Settings", icon: Settings },
-    ],
-  },
-];
+import { useCohortSummary, useFirstAccountId } from "@/features/retention/data/retentionData";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -40,6 +22,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [initials, setInitials] = useState("·");
   const [menuOpen, setMenuOpen] = useState(false);
+  const { data: cohortSummary } = useCohortSummary();
+  const { data: firstAccountId } = useFirstAccountId();
+
+  const navGroups = [
+    {
+      label: "Analyze",
+      items: [
+        { to: "/", label: "Overview", icon: LayoutDashboard, exact: true },
+        { to: "/retention", label: "Retention", icon: TrendingUp },
+        { to: "/experiments", label: "Experiments", icon: FlaskConical },
+      ],
+    },
+    {
+      label: "Manage",
+      items: [
+        { to: firstAccountId ? `/accounts/${firstAccountId}` : "/", label: "Accounts", icon: Building2 },
+        { to: "/users", label: "Users", icon: Users },
+        { to: "/settings", label: "Settings", icon: Settings },
+      ],
+    },
+  ];
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
