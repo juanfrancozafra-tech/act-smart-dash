@@ -2,6 +2,20 @@ import { useEffect, useState } from "react";
 import { WifiOff, RefreshCcw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
+async function probeOnline(): Promise<boolean> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) return false;
+  try {
+    // Cache-busted same-origin request; resolves as long as the network reaches the server.
+    await fetch(`/favicon.ico?_=${Date.now()}`, {
+      method: "HEAD",
+      cache: "no-store",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function OfflineBanner() {
   const [online, setOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine,
@@ -9,19 +23,74 @@ export function OfflineBanner() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    const goOnline = () => {
-      setOnline(true);
-      // Refetch any data that may have failed while offline.
-      queryClient.invalidateQueries();
+    let cancelled = false;
+    let pollId: ReturnType<typeof setInterval> | null = null;
+
+    const setStatus = (next: boolean) => {
+      if (cancelled) return;
+      setOnline((prev) => {
+        if (prev === next) return prev;
+        if (next) queryClient.invalidateQueries();
+        return next;
+      });
     };
-    const goOffline = () => setOnline(false);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
+
+    const check = async () => setStatus(await probeOnline());
+
+    const startPolling = () => {
+      if (pollId) return;
+      pollId = setInterval(check, 4000);
+    };
+    const stopPolling = () => {
+      if (pollId) {
+        clearInterval(pollId);
+        pollId = null;
+      }
+    };
+
+    const handleOnline = () => {
+      void check();
+    };
+    const handleOffline = () => {
+      setStatus(false);
+      startPolling();
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // Initial reconciliation: navigator.onLine can lie, so verify with a probe.
+    void check();
+
+    // Always re-check when the tab is refocused.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    // Poll only while we believe we're offline.
+    if (typeof navigator !== "undefined" && !navigator.onLine) startPolling();
+
     return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
+      cancelled = true;
+      stopPolling();
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [queryClient]);
+
+  // Whenever offline flips true, ensure we keep polling until recovery.
+  useEffect(() => {
+    if (online) return;
+    const id = setInterval(async () => {
+      if (await probeOnline()) {
+        setOnline(true);
+        queryClient.invalidateQueries();
+      }
+    }, 4000);
+    return () => clearInterval(id);
+  }, [online, queryClient]);
 
   if (online) return null;
 
@@ -40,8 +109,8 @@ export function OfflineBanner() {
           </p>
         </div>
         <button
-          onClick={() => {
-            if (navigator.onLine) {
+          onClick={async () => {
+            if (await probeOnline()) {
               setOnline(true);
               queryClient.invalidateQueries();
             }
