@@ -171,7 +171,11 @@ This decision determines whether the intervention panel becomes a real growth to
 - **Don't edit `src/routeTree.gen.ts`.** It's regenerated.
 - **The 750ms skeleton timer in `AccountDetailScreen` is a prop, not a constant.** Remove it the moment a real loader exists — don't leave both.
 - **Period scaling is deterministic by design.** If you swap to real data, keep the same function signatures in `retentionScaling.ts` so the charts don't need rewriting; just change what feeds them.
+- **Every `CREATE TABLE public.*` migration MUST be paired with explicit `GRANT`s.** Lovable Cloud does not grant default Data API privileges. Forgetting them produces opaque "permission denied" errors at runtime, not at migration time.
+- **Roles live in `user_roles`, not on `profiles`.** Never check role from the client by reading a column on the user — privilege-escalation risk. Use `useCurrentRole` for UI and `has_role()` (SECURITY DEFINER) for RLS.
+- **Don't trust `navigator.onLine`.** The `OfflineBanner` learned this the hard way; always probe a real endpoint with a short timeout before declaring "offline".
+- **Don't bypass `handleAuthError`.** A direct `supabase.auth.signOut()` or ad-hoc redirect on 401 fragments the session-expiry UX. Funnel every 401 through the helper so the cache is cleared and the banner reason is set.
 
 ---
 
-*Last updated alongside the refactor to feature-based architecture. Keep this file in sync when components move or the data layer changes.*
+*Last updated alongside the auth-hardening + resilience pass (auth gate, `user_roles` / RLS, `ErrorBoundary`, `ErrorRetryCard`, `OfflineBanner`, `handleAuthError`, `rlsToast`). Keep this file in sync when components move or the data layer changes.*
