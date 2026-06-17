@@ -15,6 +15,8 @@ import { UserQuotesStrip } from "./UserQuotesStrip";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import { useRetentionData, useKpiDefinitions, type KpiDefinition } from "../data/retentionData";
 import { usePeriod } from "../data/periodContext";
+import { useCurrentRole } from "@/hooks/useCurrentRole";
+
 import {
   getScaledKpis,
   getScaledChurnTrend,
