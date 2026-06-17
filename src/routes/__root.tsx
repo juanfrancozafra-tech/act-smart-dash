@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PeriodProvider } from "../features/retention/data/periodContext";
 import { supabase } from "../integrations/supabase/client";
 import { Toaster } from "sonner";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
