@@ -7,7 +7,7 @@
 | Number of screens | **3** | `/` Retention Dashboard (`_authenticated/index.tsx`), `/accounts/$id` Account Detail (`_authenticated/accounts.$id.tsx`), `/auth` Sign-in (`routes/auth.tsx`) |
 | Living PRD / product requirements doc | ✅ Yes | `PRD.md`, `LIVINGPRD.md`, `ENGINEERINGHANDOFF.md` at repo root |
 | Clean, descriptive variable/function names | ✅ Yes | e.g. `getScaledKpis`, `useRetentionData`, `RecommendedInterventionsPanel`, `handleNewUser` — domain-meaningful throughout |
-| GitHub connected | ❌ No | Only Lovable-internal git remotes (`git.private.lovable-gcp.code.storage`, `s3://lovable-repositories/...`); no `github.com` remote |
+| GitHub connected | ✅ Yes | Synced two-way with `github.com/juanfrancozafra-tech/act-smart-dash` |
 | Database / backend connected | ✅ Yes | Lovable Cloud (Supabase) — 12 public tables, RLS enabled, `reports` storage bucket, auth wired via `@/integrations/supabase/client` |
 
 ---
