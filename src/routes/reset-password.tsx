@@ -20,9 +20,9 @@ function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Supabase parses the recovery hash automatically. We just guard the UI.
     const hash = typeof window !== "undefined" ? window.location.hash : "";
     const isRecovery = hash.includes("type=recovery");
     const sub = supabase.auth.onAuthStateChange((event) => {
@@ -34,12 +34,22 @@ function ResetPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) return toast.error("Password must be at least 6 characters");
-    if (password !== confirm) return toast.error("Passwords don't match");
+    setFormError(null);
+    if (password.length < 6) {
+      setFormError("Password must be at least 6 characters");
+      return;
+    }
+    if (password !== confirm) {
+      setFormError("Passwords don't match");
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setFormError(error.message);
+      return;
+    }
     toast.success("Password updated. You're signed in.");
     navigate({ to: "/", replace: true });
   };
@@ -83,6 +93,11 @@ function ResetPasswordPage() {
                   className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
                 />
               </div>
+              {formError && (
+                <p role="alert" className="text-[12px] text-destructive leading-snug">
+                  {formError}
+                </p>
+              )}
               <button
                 type="submit"
                 disabled={loading}
