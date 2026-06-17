@@ -137,7 +137,6 @@ function AuthPage() {
               />
             </div>
             <div>
-            <div>
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-muted-foreground">Password</label>
                 {mode === "signin" && (
