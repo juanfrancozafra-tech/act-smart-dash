@@ -3,23 +3,27 @@ import { WifiOff, RefreshCcw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 async function probeOnline(): Promise<boolean> {
-  if (typeof navigator !== "undefined" && !navigator.onLine) return false;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 3500);
+
   try {
-    // Cache-busted same-origin request; resolves as long as the network reaches the server.
-    await fetch(`/favicon.ico?_=${Date.now()}`, {
-      method: "HEAD",
+    // Probe the app shell itself; favicon is not guaranteed to exist and can return 404.
+    await fetch(`/?offlineProbe=${Date.now()}`, {
+      method: "GET",
       cache: "no-store",
+      credentials: "same-origin",
+      signal: controller.signal,
     });
     return true;
   } catch {
     return false;
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 }
 
 export function OfflineBanner() {
-  const [online, setOnline] = useState(() =>
-    typeof navigator === "undefined" ? true : navigator.onLine,
-  );
+  const [online, setOnline] = useState(true);
   const queryClient = useQueryClient();
 
   useEffect(() => {
