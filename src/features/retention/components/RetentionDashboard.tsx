@@ -35,6 +35,8 @@ export function RetentionDashboard() {
   const { period } = usePeriod();
   const { data, isLoading, error } = useRetentionData();
   const { data: kpiDefs } = useKpiDefinitions();
+  const { canWrite } = useCurrentRole();
+
 
   const scaled = useMemo(() => {
     if (!data) return null;
