@@ -31,9 +31,12 @@
 ### Routes (`src/routes/`)
 | File | Purpose |
 | --- | --- |
-| `__root.tsx` | Root layout, head/meta, `QueryClientProvider`, `PeriodProvider`, error + 404 boundaries. |
+| `__root.tsx` | Root layout, head/meta, `QueryClientProvider`, `PeriodProvider`, `<ErrorBoundary>`, `<OfflineBanner>`, error + 404 boundaries. Subscribes to `supabase.auth.onAuthStateChange` — on `SIGNED_OUT` / token-refresh-with-null clears the query cache and redirects to `/auth?reason=expired`. |
 | `index.tsx` | `/` — thin shell that renders `<AppShell><RetentionDashboard /></AppShell>`. |
 | `accounts.$id.tsx` | `/accounts/:id` — thin shell rendering `<AccountDetailScreen />` with the route param. |
+| `auth.tsx` | `/auth` — email/password + Google. Includes "Forgot password?" (`resetPasswordForEmail` → `/reset-password`) and a session-expired banner when `?reason=expired`. |
+| `reset-password.tsx` | `/reset-password` — public; requires `type=recovery` in the URL fragment, then calls `supabase.auth.updateUser({ password })`. |
+| `_authenticated/route.tsx` | Pathless auth gate; child routes redirect to `/auth` when there's no session. |
 
 ### App shell (`src/features/shell/`)
 | Component | Purpose |
