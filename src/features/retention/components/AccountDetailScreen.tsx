@@ -23,6 +23,8 @@ import {
   useAccountRiskSignals,
   useCohortSummary,
 } from "../data/retentionData";
+import { useCurrentRole } from "@/hooks/useCurrentRole";
+
 
 export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const [step, setStep] = useState<InterventionStep>("idle");
