@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Mail, Send, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { notifyIfRlsError } from "@/lib/rlsToast";
+import { handleAuthError } from "@/lib/handleAuthError";
 
 
 export type InterventionStep = "idle" | "compose" | "sent";
@@ -21,11 +21,14 @@ export function InterventionComposer({
   seats: number;
 }) {
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const send = async () => {
     setSending(true);
+    setSendError(null);
     try {
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr) throw userErr;
       if (!userData.user) throw new Error("Not signed in");
       const body = `Hi there — we noticed your team hasn't been invited yet. Accounts that invite ${
         seats > 0 ? `their remaining ${seats} teammates` : "their teammates"
@@ -40,8 +43,12 @@ export function InterventionComposer({
       if (error) throw error;
       setStep("sent");
     } catch (err) {
-      if (notifyIfRlsError(err)) return;
-      toast.error(err instanceof Error ? err.message : "Failed to send");
+      if (handleAuthError(err)) return;
+      if (notifyIfRlsError(err)) {
+        setSendError("You don't have permission to send interventions.");
+        return;
+      }
+      setSendError(err instanceof Error ? err.message : "Failed to send");
     } finally {
       setSending(false);
     }
