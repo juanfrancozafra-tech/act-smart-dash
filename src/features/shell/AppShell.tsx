@@ -166,18 +166,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="h-5 w-px bg-border mx-1" />
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="size-8 rounded-full bg-primary/10 text-primary grid place-items-center text-[12px] font-semibold hover:bg-primary/20"
+              className="flex items-center gap-2 pl-1 pr-2 h-8 rounded-full hover:bg-muted transition-colors"
             >
-              {initials}
+              <span className="size-7 rounded-full bg-primary/10 text-primary grid place-items-center text-[12px] font-semibold">
+                {initials}
+              </span>
+              <span className="hidden sm:inline text-[13px] font-medium text-foreground max-w-[140px] truncate">
+                {displayName || "Account"}
+              </span>
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-10 z-50 w-44 rounded-md border border-border bg-card shadow-md py-1">
+              <div className="absolute right-0 top-10 z-50 w-56 rounded-md border border-border bg-card shadow-md py-1">
+                <div className="px-3 py-2 border-b border-border">
+                  <div className="text-[13px] font-medium truncate">{displayName || "—"}</div>
+                  {email && <div className="text-[11px] text-muted-foreground truncate">{email}</div>}
+                </div>
                 <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left">
                   <LogOut className="size-3.5" /> Sign out
                 </button>
               </div>
             )}
           </div>
+
         </header>
 
         <main className="flex-1 min-w-0">{children}</main>
