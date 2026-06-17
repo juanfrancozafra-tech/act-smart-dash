@@ -6,6 +6,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    reason: typeof search.reason === "string" ? (search.reason as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Sign in · Retain" },
@@ -17,13 +20,14 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
-
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -33,6 +37,7 @@ function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -53,17 +58,18 @@ function AuthPage() {
         navigate({ to: "/", replace: true });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Authentication failed");
+      setFormError(err instanceof Error ? err.message : "Authentication failed");
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoogle = async () => {
+    setFormError(null);
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     if (result.error) {
-      toast.error(result.error instanceof Error ? result.error.message : "Google sign-in failed");
+      setFormError(result.error instanceof Error ? result.error.message : "Google sign-in failed");
       setLoading(false);
       return;
     }
@@ -73,7 +79,7 @@ function AuthPage() {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      toast.error("Enter your email above, then click Forgot password.");
+      setFormError("Enter your email above, then click Forgot password.");
       return;
     }
     setResetting(true);
@@ -82,12 +88,11 @@ function AuthPage() {
     });
     setResetting(false);
     if (error) {
-      toast.error(error.message);
+      setFormError(error.message);
       return;
     }
     toast.success("Password reset email sent. Check your inbox.");
   };
-
 
   return (
     <div className="min-h-screen grid place-items-center bg-background px-4">
@@ -97,12 +102,24 @@ function AuthPage() {
           <p className="text-sm text-muted-foreground mt-1">Account health dashboard</p>
         </div>
 
+        {search.reason === "expired" && (
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2.5 text-sm text-warning-foreground"
+          >
+            Your session expired. Please sign in again.
+          </div>
+        )}
+
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="flex gap-2 mb-5 p-1 rounded-lg bg-muted">
             {(["signin", "signup"] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  setMode(m);
+                  setFormError(null);
+                }}
                 className={`flex-1 text-sm font-medium rounded-md py-1.5 transition-colors ${
                   mode === m ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
                 }`}
@@ -160,6 +177,13 @@ function AuthPage() {
                 className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               />
             </div>
+
+            {formError && (
+              <p role="alert" className="text-[12px] text-destructive leading-snug">
+                {formError}
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -168,7 +192,6 @@ function AuthPage() {
               {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
           </form>
-
 
           <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
             <div className="flex-1 h-px bg-border" />
