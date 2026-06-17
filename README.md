@@ -144,10 +144,15 @@ src/
   - New cross-cutting utility (formatter, error reporter, etc.) → `lib/`
 
 
+### Now in scope (auth + resilience pass)
+- **Authentication** — email/password + Google sign-in, "Forgot password?" → email recovery → `/reset-password`.
+- **Role-based access** — `admin` / `csm` / `viewer` stored in `user_roles`, checked via `has_role()` SECURITY DEFINER. Viewer sees a read-only dashboard; write affordances are hidden client-side and blocked server-side by RLS.
+- **Per-user data isolation** — RLS on `interventions`: SELECT to `authenticated`, INSERT/UPDATE only for `csm` / `admin`. Reference tables: SELECT to `authenticated` only (no anon).
+- **Resilience** — global `<ErrorBoundary>`, shared `<ErrorRetryCard>` for query failures, skeleton loading states, RLS write-failure toast ("You don't have permission to do this"), session-expiry redirect with `?reason=expired` banner, and an `<OfflineBanner>` that actively probes connectivity and auto-dismisses on recovery.
+
 ### Explicitly out of scope
 - Real telemetry / data pipeline
-- Authentication and multi-tenant isolation
-- Persisting sent interventions
+- Persisting sent interventions to a warehouse-grade store
 - Email / Slack delivery for nudges
 - Admin configuration of risk thresholds
 
