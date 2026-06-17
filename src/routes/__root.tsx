@@ -15,6 +15,7 @@ import { PeriodProvider } from "../features/retention/data/periodContext";
 import { supabase } from "../integrations/supabase/client";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { OfflineBanner } from "../components/OfflineBanner";
 
 function NotFoundComponent() {
   return (
@@ -150,6 +151,7 @@ function RootComponent() {
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
         </ErrorBoundary>
+        <OfflineBanner />
         <Toaster richColors position="top-right" />
       </PeriodProvider>
     </QueryClientProvider>
