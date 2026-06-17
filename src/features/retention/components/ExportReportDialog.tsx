@@ -91,7 +91,9 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
       }
       setOpen(false);
     } catch (err) {
+      if (notifyIfRlsError(err)) return;
       toast.error(err instanceof Error ? err.message : "Export failed");
+
     } finally {
       setBusy(false);
     }
