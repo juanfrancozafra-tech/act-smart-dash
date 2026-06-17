@@ -132,8 +132,10 @@ export type Database = {
       accounts: {
         Row: {
           arr: number
+          cohort_id: string | null
           created_at: string
           csm: string
+          csm_user_id: string | null
           days_since_signup: number
           features_adopted: number
           features_total: number
@@ -142,6 +144,7 @@ export type Database = {
           industry: string
           invited_seats: number
           last_active: string
+          last_active_at: string | null
           name: string
           onboarding_completion: number
           primary_risk: string
@@ -151,8 +154,10 @@ export type Database = {
         }
         Insert: {
           arr?: number
+          cohort_id?: string | null
           created_at?: string
           csm?: string
+          csm_user_id?: string | null
           days_since_signup?: number
           features_adopted?: number
           features_total?: number
@@ -161,6 +166,7 @@ export type Database = {
           industry: string
           invited_seats?: number
           last_active?: string
+          last_active_at?: string | null
           name: string
           onboarding_completion?: number
           primary_risk?: string
@@ -170,8 +176,10 @@ export type Database = {
         }
         Update: {
           arr?: number
+          cohort_id?: string | null
           created_at?: string
           csm?: string
+          csm_user_id?: string | null
           days_since_signup?: number
           features_adopted?: number
           features_total?: number
@@ -180,6 +188,7 @@ export type Database = {
           industry?: string
           invited_seats?: number
           last_active?: string
+          last_active_at?: string | null
           name?: string
           onboarding_completion?: number
           primary_risk?: string
@@ -187,7 +196,22 @@ export type Database = {
           seats?: number
           weekly_active_users?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounts_cohort_id_fkey"
+            columns: ["cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_csm_user_id_fkey"
+            columns: ["csm_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       activation_funnel: {
         Row: {
