@@ -14,6 +14,121 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_activity: {
+        Row: {
+          account_id: string
+          active_sessions: number
+          created_at: string
+          id: string
+          week_start: string
+          weekly_active_users: number
+        }
+        Insert: {
+          account_id: string
+          active_sessions?: number
+          created_at?: string
+          id?: string
+          week_start: string
+          weekly_active_users?: number
+        }
+        Update: {
+          account_id?: string
+          active_sessions?: number
+          created_at?: string
+          id?: string
+          week_start?: string
+          weekly_active_users?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_activity_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_onboarding_progress: {
+        Row: {
+          account_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          step_id: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          step_id: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          step_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_onboarding_progress_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_onboarding_progress_step_id_fkey"
+            columns: ["step_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_steps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      account_risk_signals: {
+        Row: {
+          account_id: string
+          body: string
+          computed_at: string
+          id: string
+          rank: number
+          severity: string
+          title: string
+        }
+        Insert: {
+          account_id: string
+          body: string
+          computed_at?: string
+          id?: string
+          rank: number
+          severity: string
+          title: string
+        }
+        Update: {
+          account_id?: string
+          body?: string
+          computed_at?: string
+          id?: string
+          rank?: number
+          severity?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_risk_signals_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           arr: number
@@ -143,6 +258,63 @@ export type Database = {
         }
         Relationships: []
       }
+      cohorts: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          started_at: string | null
+          window_days: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          started_at?: string | null
+          window_days?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          started_at?: string | null
+          window_days?: number
+        }
+        Relationships: []
+      }
+      exports: {
+        Row: {
+          created_at: string
+          created_by: string
+          format: string
+          id: string
+          period_label: string
+          size_bytes: number
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          format: string
+          id?: string
+          period_label: string
+          size_bytes?: number
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          format?: string
+          id?: string
+          period_label?: string
+          size_bytes?: number
+          storage_path?: string
+        }
+        Relationships: []
+      }
       interventions: {
         Row: {
           account_id: string
@@ -199,6 +371,41 @@ export type Database = {
         }
         Relationships: []
       }
+      kpi_definitions: {
+        Row: {
+          calculation: string
+          created_at: string
+          key: string
+          recommendation: string | null
+          updated_at: string
+          why: string
+        }
+        Insert: {
+          calculation: string
+          created_at?: string
+          key: string
+          recommendation?: string | null
+          updated_at?: string
+          why: string
+        }
+        Update: {
+          calculation?: string
+          created_at?: string
+          key?: string
+          recommendation?: string | null
+          updated_at?: string
+          why?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_definitions_key_fkey"
+            columns: ["key"]
+            isOneToOne: true
+            referencedRelation: "kpis"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       kpis: {
         Row: {
           delta: number
@@ -223,6 +430,30 @@ export type Database = {
           label?: string
           suffix?: string
           value?: number
+        }
+        Relationships: []
+      }
+      onboarding_steps: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          label: string
+          ordinal: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          label: string
+          ordinal: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          label?: string
+          ordinal?: number
         }
         Relationships: []
       }
