@@ -22,6 +22,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -68,6 +70,24 @@ function AuthPage() {
     if (result.redirected) return;
     navigate({ to: "/", replace: true });
   };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Enter your email above, then click Forgot password.");
+      return;
+    }
+    setResetting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Password reset email sent. Check your inbox.");
+  };
+
 
   return (
     <div className="min-h-screen grid place-items-center bg-background px-4">
@@ -117,7 +137,19 @@ function AuthPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Password</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-muted-foreground">Password</label>
+                {mode === "signin" && (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={resetting}
+                    className="text-[11px] font-medium text-primary hover:text-primary/80 disabled:opacity-50"
+                  >
+                    {resetting ? "Sending…" : "Forgot password?"}
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}
@@ -136,6 +168,7 @@ function AuthPage() {
               {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
           </form>
+
 
           <div className="my-4 flex items-center gap-3 text-[11px] text-muted-foreground">
             <div className="flex-1 h-px bg-border" />

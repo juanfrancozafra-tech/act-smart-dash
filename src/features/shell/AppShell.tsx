@@ -21,6 +21,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [initials, setInitials] = useState("·");
+  const [displayName, setDisplayName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: cohortSummary } = useCohortSummary();
   const { data: firstAccountId } = useFirstAccountId();
@@ -45,15 +47,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   ];
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getUser();
       const u = data.user;
-      if (!u) return;
-      const name = (u.user_metadata?.full_name as string | undefined) || u.email || "";
+      if (!u || cancelled) return;
+      setEmail(u.email ?? "");
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", u.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const name =
+        profile?.full_name ||
+        (u.user_metadata?.full_name as string | undefined) ||
+        u.email ||
+        "";
+      setDisplayName(name);
       const parts = name.split(/[ @]/).filter(Boolean);
       const init = (parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "");
       setInitials(init.toUpperCase() || "U");
-    });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
 
   const signOut = async () => {
     await queryClient.cancelQueries();
@@ -146,18 +166,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="h-5 w-px bg-border mx-1" />
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              className="size-8 rounded-full bg-primary/10 text-primary grid place-items-center text-[12px] font-semibold hover:bg-primary/20"
+              className="flex items-center gap-2 pl-1 pr-2 h-8 rounded-full hover:bg-muted transition-colors"
             >
-              {initials}
+              <span className="size-7 rounded-full bg-primary/10 text-primary grid place-items-center text-[12px] font-semibold">
+                {initials}
+              </span>
+              <span className="hidden sm:inline text-[13px] font-medium text-foreground max-w-[140px] truncate">
+                {displayName || "Account"}
+              </span>
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-10 z-50 w-44 rounded-md border border-border bg-card shadow-md py-1">
+              <div className="absolute right-0 top-10 z-50 w-56 rounded-md border border-border bg-card shadow-md py-1">
+                <div className="px-3 py-2 border-b border-border">
+                  <div className="text-[13px] font-medium truncate">{displayName || "—"}</div>
+                  {email && <div className="text-[11px] text-muted-foreground truncate">{email}</div>}
+                </div>
                 <button onClick={signOut} className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted text-left">
                   <LogOut className="size-3.5" /> Sign out
                 </button>
               </div>
             )}
           </div>
+
         </header>
 
         <main className="flex-1 min-w-0">{children}</main>

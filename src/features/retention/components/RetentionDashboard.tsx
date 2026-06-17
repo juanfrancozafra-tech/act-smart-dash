@@ -15,6 +15,8 @@ import { UserQuotesStrip } from "./UserQuotesStrip";
 import { DashboardEmptyState } from "./DashboardEmptyState";
 import { useRetentionData, useKpiDefinitions, type KpiDefinition } from "../data/retentionData";
 import { usePeriod } from "../data/periodContext";
+import { useCurrentRole } from "@/hooks/useCurrentRole";
+
 import {
   getScaledKpis,
   getScaledChurnTrend,
@@ -33,6 +35,8 @@ export function RetentionDashboard() {
   const { period } = usePeriod();
   const { data, isLoading, error } = useRetentionData();
   const { data: kpiDefs } = useKpiDefinitions();
+  const { canWrite } = useCurrentRole();
+
 
   const scaled = useMemo(() => {
     if (!data) return null;
@@ -109,19 +113,22 @@ export function RetentionDashboard() {
 
           <div className="flex items-center gap-2 shrink-0">
             <PeriodSelector />
-            <ExportReportDialog
-              accounts={data.accounts}
-              topDrivers={data.topDrivers}
-              kpis={kpis}
-              funnel={funnel}
-              trigger={
-                <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground hover:bg-[#1D4ED8] shadow-xs text-[13px] font-medium transition-colors">
-                  <Download className="size-3.5" />
-                  Export
-                </button>
-              }
-            />
+            {canWrite && (
+              <ExportReportDialog
+                accounts={data.accounts}
+                topDrivers={data.topDrivers}
+                kpis={kpis}
+                funnel={funnel}
+                trigger={
+                  <button className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground hover:bg-[#1D4ED8] shadow-xs text-[13px] font-medium transition-colors">
+                    <Download className="size-3.5" />
+                    Export
+                  </button>
+                }
+              />
+            )}
           </div>
+
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-px rounded-xl border border-border bg-border overflow-hidden mb-8">

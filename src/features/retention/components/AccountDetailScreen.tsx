@@ -23,6 +23,8 @@ import {
   useAccountRiskSignals,
   useCohortSummary,
 } from "../data/retentionData";
+import { useCurrentRole } from "@/hooks/useCurrentRole";
+
 
 export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const [step, setStep] = useState<InterventionStep>("idle");
@@ -31,8 +33,10 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const { data: onboardingSteps } = useAccountOnboarding(accountId);
   const { data: riskSignals } = useAccountRiskSignals(accountId);
   const { data: cohortSummary } = useCohortSummary();
+  const { canWrite } = useCurrentRole();
   const recommendedInterventions = retention?.recommendedInterventions ?? [];
   const windowDays = cohortSummary?.cohort?.windowDays ?? 90;
+
 
   if (isLoading) {
     return (
@@ -105,18 +109,25 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2 min-w-[180px]">
-            <button
-              onClick={() => setStep("compose")}
-              className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-md px-4 py-2.5 text-sm font-medium hover:bg-primary/90"
-            >
-              <Mail className="size-4" /> Send re-engagement nudge
-            </button>
-            <button className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2.5 text-sm font-medium hover:bg-muted">
-              <Calendar className="size-4" /> Schedule CSM call
-            </button>
-          </div>
+          {canWrite ? (
+            <div className="flex flex-col gap-2 min-w-[180px]">
+              <button
+                onClick={() => setStep("compose")}
+                className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-md px-4 py-2.5 text-sm font-medium hover:bg-primary/90"
+              >
+                <Mail className="size-4" /> Send re-engagement nudge
+              </button>
+              <button className="inline-flex items-center justify-center gap-2 border border-border rounded-md px-4 py-2.5 text-sm font-medium hover:bg-muted">
+                <Calendar className="size-4" /> Schedule CSM call
+              </button>
+            </div>
+          ) : (
+            <div className="min-w-[180px] text-[11px] text-muted-foreground self-center">
+              View-only access. Ask an admin for CSM permissions to send interventions.
+            </div>
+          )}
         </div>
+
 
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
