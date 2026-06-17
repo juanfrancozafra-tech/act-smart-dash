@@ -108,8 +108,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="mx-3 mb-3 rounded-lg border border-sidebar-border bg-sidebar-accent/50 p-3">
-          <div className="text-[11px] font-semibold text-foreground">Q2 2026 cohort</div>
-          <div className="text-[11px] text-muted-foreground mt-0.5">1,000 signups tracked</div>
+          <div className="text-[11px] font-semibold text-foreground">
+            {cohortSummary?.cohort?.label ?? "—"} cohort
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-0.5">
+            {(cohortSummary?.signupCount ?? 0).toLocaleString()} signups tracked
+            {cohortSummary?.cohort?.windowDays ? ` · ${cohortSummary.cohort.windowDays}-day window` : ""}
+          </div>
           <button className="mt-2 text-[11px] font-medium text-primary hover:text-primary/80">
             Switch cohort →
           </button>
