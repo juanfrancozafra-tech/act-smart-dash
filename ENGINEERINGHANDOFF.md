@@ -74,6 +74,14 @@
 
 ### Shared
 - `src/components/ui/*` — unmodified shadcn primitives. Treat as a vendor library.
+- `src/components/ErrorBoundary.tsx` — global render-error boundary; renders `<ErrorRetryCard>` on caught errors. Wrapped around the route tree in `__root.tsx`.
+- `src/components/ErrorRetryCard.tsx` — centered card with error message + Retry button. Used by `RetentionDashboard`, `AccountDetailScreen`, and `ErrorBoundary` so query, render, and network failures share one visual.
+- `src/components/OfflineBanner.tsx` — actively probes connectivity with `HEAD /?offlineProbe=…` (3.5s timeout, abortable, `cache: no-store`). Shows only when a real request fails; auto-dismisses on the next successful probe or `online` event. Mounted once in `__root.tsx`.
+- `src/features/retention/components/skeletons.tsx` — shared loading skeletons for the dashboard and account detail.
+- `src/hooks/useCurrentRole.ts` — reads the current user's role from `user_roles` via `has_role`. Drives read-only UI for `viewer` and gates write affordances for `csm` / `admin`.
+- `src/lib/handleAuthError.ts` — single helper for 401s from server fns / supabase calls; clears the query cache and redirects to `/auth?reason=expired`.
+- `src/lib/rlsToast.ts` — detects Postgres `42501` / RLS errors on writes and surfaces the inline "You don't have permission to do this" toast.
+- `src/lib/seed.functions.ts` — admin-only server fn that seeds the two demo users (admin + viewer) and their `user_roles` rows.
 - `src/hooks/*` — generic React hooks. No retention logic.
 - `src/lib/lovable-error-reporting.ts` — error reporter wired into the root error boundary.
 
