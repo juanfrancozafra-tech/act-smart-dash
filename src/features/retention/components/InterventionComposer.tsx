@@ -86,6 +86,11 @@ export function InterventionComposer({
               <Send className="size-3.5" /> {sending ? "Sending…" : "Confirm send"}
             </button>
           </div>
+          {sendError && (
+            <p role="alert" className="text-[12px] text-destructive leading-snug">
+              {sendError}
+            </p>
+          )}
         </div>
       )}
 
