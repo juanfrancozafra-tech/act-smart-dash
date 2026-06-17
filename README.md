@@ -64,10 +64,10 @@ The intervention surface. Designed so a user can go from "this account looks bad
 
 ### Stack
 - **TanStack Start v1** (React 19, Vite 7) for file-based routing and a single shareable public URL.
+- **Lovable Cloud (Supabase)** for auth (email/password + Google), role-based access (`user_roles` + `has_role()` SECURITY DEFINER), and RLS-scoped writes on `interventions`.
 - **Recharts** for the churn curve, activation funnel, and invite-vs-retention comparison.
 - **Custom SVG** for the account health gauge — Recharts was the wrong primitive for a single-value radial.
 - **Tailwind v4** via `src/styles.css` using native `@import` + theme variables (no legacy `tailwind.config.js`).
-- **No database, no auth.** Intentional — the prototype must open instantly from a link with no friction.
 
 ### Project structure
 
@@ -78,9 +78,12 @@ deliberately thin — they only declare URL, metadata, and the loader.
 ```
 src/
   routes/                                  # thin TanStack Start route files
-    __root.tsx                             # shell, providers, head() defaults
+    __root.tsx                             # shell, providers, ErrorBoundary, OfflineBanner, auth listener
     index.tsx                              # /              → <RetentionDashboard />
     accounts.$id.tsx                       # /accounts/$id  → <AccountDetailScreen />
+    auth.tsx                               # /auth          → email/password + Google + forgot-password
+    reset-password.tsx                     # /reset-password (recovery flow)
+    _authenticated/route.tsx               # pathless auth gate
 
   features/
     retention/
@@ -113,10 +116,14 @@ src/
       AppShell.tsx                         # sidebar + topbar layout wrapper
 
   components/ui/                           # shadcn primitives (do not rename)
-  hooks/                                   # generic React hooks
-  lib/                                     # framework utilities (cn, error reporting, …)
+  components/ErrorBoundary.tsx             # global render-error boundary
+  components/ErrorRetryCard.tsx            # shared retry card (queries + boundary)
+  components/OfflineBanner.tsx             # active connectivity probe, auto-dismiss
+  hooks/                                   # generic React hooks (incl. useCurrentRole)
+  lib/                                     # framework utilities (cn, handleAuthError, rlsToast, …)
   styles.css                               # theme tokens (incl. risk palette)
 ```
+
 
 ### Conventions
 
@@ -137,10 +144,15 @@ src/
   - New cross-cutting utility (formatter, error reporter, etc.) → `lib/`
 
 
+### Now in scope (auth + resilience pass)
+- **Authentication** — email/password + Google sign-in, "Forgot password?" → email recovery → `/reset-password`.
+- **Role-based access** — `admin` / `csm` / `viewer` stored in `user_roles`, checked via `has_role()` SECURITY DEFINER. Viewer sees a read-only dashboard; write affordances are hidden client-side and blocked server-side by RLS.
+- **Per-user data isolation** — RLS on `interventions`: SELECT to `authenticated`, INSERT/UPDATE only for `csm` / `admin`. Reference tables: SELECT to `authenticated` only (no anon).
+- **Resilience** — global `<ErrorBoundary>`, shared `<ErrorRetryCard>` for query failures, skeleton loading states, RLS write-failure toast ("You don't have permission to do this"), session-expiry redirect with `?reason=expired` banner, and an `<OfflineBanner>` that actively probes connectivity and auto-dismisses on recovery.
+
 ### Explicitly out of scope
 - Real telemetry / data pipeline
-- Authentication and multi-tenant isolation
-- Persisting sent interventions
+- Persisting sent interventions to a warehouse-grade store
 - Email / Slack delivery for nudges
 - Admin configuration of risk thresholds
 

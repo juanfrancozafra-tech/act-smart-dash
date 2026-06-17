@@ -115,21 +115,24 @@ Supporting flows: change global period → all visualizations recalculate · exp
 
 ### Functional (real) in the prototype
 - All UI, routing, navigation (TanStack Start v1, React 19, Vite 7).
-- Global Period Selector — deterministic recalculation of KPIs, churn curves, funnel, at-risk list (`src/lib/retention-scaling.ts`).
+- **Authentication** — Lovable Cloud (Supabase) email/password + Google, plus password reset (`/auth` → `resetPasswordForEmail` → `/reset-password`).
+- **Role-based access** — `admin` / `csm` / `viewer` stored in `user_roles`, checked via `has_role()` SECURITY DEFINER. Viewer = read-only UI; writes blocked server-side by RLS.
+- **Per-user data isolation** — RLS on `interventions` (SELECT to `authenticated`, INSERT/UPDATE only for `csm` / `admin`); reference tables restricted to `authenticated`.
+- **Resilience layer** — global `<ErrorBoundary>`, shared `<ErrorRetryCard>`, skeletons, RLS write-failure toast, 401 → `/auth?reason=expired` redirect with banner, active-probe `<OfflineBanner>` that auto-dismisses on recovery.
+- Global Period Selector — deterministic recalculation of KPIs, churn curves, funnel, at-risk list (`features/retention/data/retentionScaling.ts`).
 - At-Risk table sorting — full sort / persistence / FLIP animation pipeline.
 - Hover states on KPI / insight / chart cards.
 - Report Export — generates real `.md` / `.csv` / `.xls` client-side and downloads.
 - Skeleton and empty states — triggered by real data conditions, not toggles.
-- Intervention flow — clickable end-to-end.
+- Intervention flow — clickable end-to-end (UI only; not persisted).
 - Custom SVG health gauge, Recharts visualizations, responsive layout.
 
 ### Mocked (intentionally, for a validation prototype)
-- **All account data, KPIs, trends, drivers, quotes** in `src/lib/retention-data.ts` — no DB, no telemetry.
+- **All account data, KPIs, trends, drivers, quotes** in `features/retention/data/retentionData.ts` — no warehouse, no telemetry.
 - **AI insights** — pre-written strings, not a live LLM call.
 - **Account detail fetch** — `~750ms` simulated delay to demonstrate the skeleton.
-- **Sent interventions** — not persisted; reload resets the flow.
+- **Sent interventions** — UI flow runs end-to-end but is not persisted to the `interventions` table yet; reload resets the flow.
 - **Email / Slack delivery** for nudges — not wired to any provider.
-- **Authentication and multi-tenancy** — intentionally absent so the prototype opens instantly from a link.
 
 ### What would need real data to ship
 | Surface | Required source |

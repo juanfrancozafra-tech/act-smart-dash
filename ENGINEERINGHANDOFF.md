@@ -31,9 +31,12 @@
 ### Routes (`src/routes/`)
 | File | Purpose |
 | --- | --- |
-| `__root.tsx` | Root layout, head/meta, `QueryClientProvider`, `PeriodProvider`, error + 404 boundaries. |
+| `__root.tsx` | Root layout, head/meta, `QueryClientProvider`, `PeriodProvider`, `<ErrorBoundary>`, `<OfflineBanner>`, error + 404 boundaries. Subscribes to `supabase.auth.onAuthStateChange` — on `SIGNED_OUT` / token-refresh-with-null clears the query cache and redirects to `/auth?reason=expired`. |
 | `index.tsx` | `/` — thin shell that renders `<AppShell><RetentionDashboard /></AppShell>`. |
 | `accounts.$id.tsx` | `/accounts/:id` — thin shell rendering `<AccountDetailScreen />` with the route param. |
+| `auth.tsx` | `/auth` — email/password + Google. Includes "Forgot password?" (`resetPasswordForEmail` → `/reset-password`) and a session-expired banner when `?reason=expired`. |
+| `reset-password.tsx` | `/reset-password` — public; requires `type=recovery` in the URL fragment, then calls `supabase.auth.updateUser({ password })`. |
+| `_authenticated/route.tsx` | Pathless auth gate; child routes redirect to `/auth` when there's no session. |
 
 ### App shell (`src/features/shell/`)
 | Component | Purpose |
@@ -71,6 +74,14 @@
 
 ### Shared
 - `src/components/ui/*` — unmodified shadcn primitives. Treat as a vendor library.
+- `src/components/ErrorBoundary.tsx` — global render-error boundary; renders `<ErrorRetryCard>` on caught errors. Wrapped around the route tree in `__root.tsx`.
+- `src/components/ErrorRetryCard.tsx` — centered card with error message + Retry button. Used by `RetentionDashboard`, `AccountDetailScreen`, and `ErrorBoundary` so query, render, and network failures share one visual.
+- `src/components/OfflineBanner.tsx` — actively probes connectivity with `HEAD /?offlineProbe=…` (3.5s timeout, abortable, `cache: no-store`). Shows only when a real request fails; auto-dismisses on the next successful probe or `online` event. Mounted once in `__root.tsx`.
+- `src/features/retention/components/skeletons.tsx` — shared loading skeletons for the dashboard and account detail.
+- `src/hooks/useCurrentRole.ts` — reads the current user's role from `user_roles` via `has_role`. Drives read-only UI for `viewer` and gates write affordances for `csm` / `admin`.
+- `src/lib/handleAuthError.ts` — single helper for 401s from server fns / supabase calls; clears the query cache and redirects to `/auth?reason=expired`.
+- `src/lib/rlsToast.ts` — detects Postgres `42501` / RLS errors on writes and surfaces the inline "You don't have permission to do this" toast.
+- `src/lib/seed.functions.ts` — admin-only server fn that seeds the two demo users (admin + viewer) and their `user_roles` rows.
 - `src/hooks/*` — generic React hooks. No retention logic.
 - `src/lib/lovable-error-reporting.ts` — error reporter wired into the root error boundary.
 
@@ -96,17 +107,29 @@
 | Account detail fetch | `AccountDetailScreen.tsx` (`setTimeout(750)`) | Replace with a real loader + suspense. |
 | Sent interventions | `InterventionComposer.tsx` | Persist to `interventions` table; wire delivery (Resend / Slack). |
 | Per-template lift (`+12% invites`, etc.) | `data/retentionData.ts` | Compute from `intervention_outcomes` join, don't hardcode. |
-| Auth / multi-tenancy | absent | Required before this leaves the prototype URL. |
+
+### What's now real (auth + resilience pass)
+| Surface | Where | Notes |
+| --- | --- | --- |
+| Auth (email/password + Google, password reset) | `routes/auth.tsx`, `routes/reset-password.tsx` | Lovable Cloud / Supabase. No anonymous sign-ups. |
+| Auth gate | `routes/_authenticated/route.tsx` | All protected screens live under this layout. |
+| Role-based access | `hooks/useCurrentRole.ts`, `user_roles` table, `has_role()` SECURITY DEFINER fn | Roles: `admin`, `csm`, `viewer`. Viewer = read-only UI; writes gated server-side by RLS. |
+| Per-user data isolation | RLS on `interventions` (and other write tables) | SELECT to `authenticated`; INSERT/UPDATE only for `csm` / `admin`. Reference tables: SELECT to `authenticated` only (no anon). |
+| RLS write-failure UX | `lib/rlsToast.ts` | Detects Postgres `42501` and shows "You don't have permission to do this". |
+| 401 / session expiry | `lib/handleAuthError.ts` + `__root.tsx` auth listener | Clears query cache, redirects to `/auth?reason=expired`, shows banner. |
+| Global render-error recovery | `components/ErrorBoundary.tsx` + `ErrorRetryCard.tsx` | Uncaught render errors and query errors share one retry card. Retry calls `queryClient.invalidateQueries(...)`. |
+| Offline handling | `components/OfflineBanner.tsx` | Probes `/?offlineProbe=…` instead of trusting `navigator.onLine`; auto-dismisses when the network returns. |
 
 ### Target schema (when you flip the switch — guidance, not code)
 - `accounts(id, name, industry, csm_id, arr, seats, invited_seats, created_at)`
 - `events(id, account_id, user_id, type, ts, props jsonb)` — append-only product events
 - `health_scores(account_id, ts, score, risk_tier, weights_version)` — daily snapshot
 - `churn_drivers(account_id, ts, driver_key, weight)` — ranked per account
-- `interventions(id, account_id, template_key, body, sent_by, sent_at, channel)`
+- `interventions(id, account_id, template_key, body, sent_by, sent_at, channel)` — RLS live today
 - `intervention_outcomes(intervention_id, retained_30d boolean, retained_90d boolean, measured_at)`
+- `user_roles(user_id, role app_role)` — live today; queried via `has_role(uid, role)`
 
-RLS on every table scoped by `org_id` (add to all tables). Reads via `createServerFn` with `requireSupabaseAuth`. Writes via server fns; webhooks under `/api/public/*` with HMAC verification.
+RLS on every table scoped by `org_id` (add to all write tables alongside the existing role-based policies). Reads via `createServerFn` with `requireSupabaseAuth`. Writes via server fns; webhooks under `/api/public/*` with HMAC verification.
 
 ---
 
@@ -148,7 +171,11 @@ This decision determines whether the intervention panel becomes a real growth to
 - **Don't edit `src/routeTree.gen.ts`.** It's regenerated.
 - **The 750ms skeleton timer in `AccountDetailScreen` is a prop, not a constant.** Remove it the moment a real loader exists — don't leave both.
 - **Period scaling is deterministic by design.** If you swap to real data, keep the same function signatures in `retentionScaling.ts` so the charts don't need rewriting; just change what feeds them.
+- **Every `CREATE TABLE public.*` migration MUST be paired with explicit `GRANT`s.** Lovable Cloud does not grant default Data API privileges. Forgetting them produces opaque "permission denied" errors at runtime, not at migration time.
+- **Roles live in `user_roles`, not on `profiles`.** Never check role from the client by reading a column on the user — privilege-escalation risk. Use `useCurrentRole` for UI and `has_role()` (SECURITY DEFINER) for RLS.
+- **Don't trust `navigator.onLine`.** The `OfflineBanner` learned this the hard way; always probe a real endpoint with a short timeout before declaring "offline".
+- **Don't bypass `handleAuthError`.** A direct `supabase.auth.signOut()` or ad-hoc redirect on 401 fragments the session-expiry UX. Funnel every 401 through the helper so the cache is cleared and the banner reason is set.
 
 ---
 
-*Last updated alongside the refactor to feature-based architecture. Keep this file in sync when components move or the data layer changes.*
+*Last updated alongside the auth-hardening + resilience pass (auth gate, `user_roles` / RLS, `ErrorBoundary`, `ErrorRetryCard`, `OfflineBanner`, `handleAuthError`, `rlsToast`). Keep this file in sync when components move or the data layer changes.*
