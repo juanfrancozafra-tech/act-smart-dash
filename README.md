@@ -64,10 +64,10 @@ The intervention surface. Designed so a user can go from "this account looks bad
 
 ### Stack
 - **TanStack Start v1** (React 19, Vite 7) for file-based routing and a single shareable public URL.
+- **Lovable Cloud (Supabase)** for auth (email/password + Google), role-based access (`user_roles` + `has_role()` SECURITY DEFINER), and RLS-scoped writes on `interventions`.
 - **Recharts** for the churn curve, activation funnel, and invite-vs-retention comparison.
 - **Custom SVG** for the account health gauge — Recharts was the wrong primitive for a single-value radial.
 - **Tailwind v4** via `src/styles.css` using native `@import` + theme variables (no legacy `tailwind.config.js`).
-- **No database, no auth.** Intentional — the prototype must open instantly from a link with no friction.
 
 ### Project structure
 
