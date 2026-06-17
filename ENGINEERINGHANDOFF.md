@@ -107,15 +107,19 @@
 | Account detail fetch | `AccountDetailScreen.tsx` (`setTimeout(750)`) | Replace with a real loader + suspense. |
 | Sent interventions | `InterventionComposer.tsx` | Persist to `interventions` table; wire delivery (Resend / Slack). |
 | Per-template lift (`+12% invites`, etc.) | `data/retentionData.ts` | Compute from `intervention_outcomes` join, don't hardcode. |
-| Auth / multi-tenancy | absent | Required before this leaves the prototype URL. |
 
-### Target schema (when you flip the switch — guidance, not code)
-- `accounts(id, name, industry, csm_id, arr, seats, invited_seats, created_at)`
-- `events(id, account_id, user_id, type, ts, props jsonb)` — append-only product events
-- `health_scores(account_id, ts, score, risk_tier, weights_version)` — daily snapshot
-- `churn_drivers(account_id, ts, driver_key, weight)` — ranked per account
-- `interventions(id, account_id, template_key, body, sent_by, sent_at, channel)`
-- `intervention_outcomes(intervention_id, retained_30d boolean, retained_90d boolean, measured_at)`
+### What's now real (auth + resilience pass)
+| Surface | Where | Notes |
+| --- | --- | --- |
+| Auth (email/password + Google, password reset) | `routes/auth.tsx`, `routes/reset-password.tsx` | Lovable Cloud / Supabase. No anonymous sign-ups. |
+| Auth gate | `routes/_authenticated/route.tsx` | All protected screens live under this layout. |
+| Role-based access | `hooks/useCurrentRole.ts`, `user_roles` table, `has_role()` SECURITY DEFINER fn | Roles: `admin`, `csm`, `viewer`. Viewer = read-only UI; writes gated server-side by RLS. |
+| Per-user data isolation | RLS on `interventions` (and other write tables) | SELECT to `authenticated`; INSERT/UPDATE only for `csm` / `admin`. Reference tables: SELECT to `authenticated` only (no anon). |
+| RLS write-failure UX | `lib/rlsToast.ts` | Detects Postgres `42501` and shows "You don't have permission to do this". |
+| 401 / session expiry | `lib/handleAuthError.ts` + `__root.tsx` auth listener | Clears query cache, redirects to `/auth?reason=expired`, shows banner. |
+| Global render-error recovery | `components/ErrorBoundary.tsx` + `ErrorRetryCard.tsx` | Uncaught render errors and query errors share one retry card. Retry calls `queryClient.invalidateQueries(...)`. |
+| Offline handling | `components/OfflineBanner.tsx` | Probes `/?offlineProbe=…` instead of trusting `navigator.onLine`; auto-dismisses when the network returns. |
+
 
 RLS on every table scoped by `org_id` (add to all tables). Reads via `createServerFn` with `requireSupabaseAuth`. Writes via server fns; webhooks under `/api/public/*` with HMAC verification.
 
