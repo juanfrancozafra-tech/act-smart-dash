@@ -33,8 +33,10 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const { data: onboardingSteps } = useAccountOnboarding(accountId);
   const { data: riskSignals } = useAccountRiskSignals(accountId);
   const { data: cohortSummary } = useCohortSummary();
+  const { canWrite } = useCurrentRole();
   const recommendedInterventions = retention?.recommendedInterventions ?? [];
   const windowDays = cohortSummary?.cohort?.windowDays ?? 90;
+
 
   if (isLoading) {
     return (
