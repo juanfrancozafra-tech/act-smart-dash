@@ -1,7 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { RefreshCcw, ArrowLeft, Inbox, Activity } from "lucide-react";
+import { RefreshCcw, ArrowLeft, Inbox, Activity, Mail } from "lucide-react";
 
-export function AccountEmptyState({ accountName }: { accountName?: string }) {
+interface Props {
+  accountName?: string;
+  onSendFirstInvite?: () => void;
+}
+
+export function AccountEmptyState({ accountName, onSendFirstInvite }: Props) {
   const reasons = [
     "Account was created in the last few hours and data is still landing.",
     "Sync with your product analytics warehouse is in progress.",
@@ -39,16 +44,17 @@ export function AccountEmptyState({ accountName }: { accountName?: string }) {
         </ul>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90">
+          {onSendFirstInvite && (
+            <button
+              onClick={onSendFirstInvite}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
+            >
+              <Mail className="size-4" /> Send first invite
+            </button>
+          )}
+          <button className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-border bg-surface text-sm font-medium hover:bg-muted">
             <RefreshCcw className="size-4" /> Refresh data
           </button>
-          <Link
-            to="/accounts/$id"
-            params={{ id: "bright-labs" }}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-border bg-surface text-sm font-medium hover:bg-muted"
-          >
-            View another client
-          </Link>
           <Link
             to="/"
             className="inline-flex items-center gap-2 h-10 px-4 rounded-md border border-border bg-surface text-sm font-medium hover:bg-muted"

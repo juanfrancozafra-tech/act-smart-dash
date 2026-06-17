@@ -15,6 +15,7 @@ import type { Account, Driver, FunnelStep, KpiBundle } from "../data/retentionDa
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { notifyIfRlsError } from "@/lib/rlsToast";
+import { handleAuthError } from "@/lib/handleAuthError";
 
 
 type Format = "md" | "csv" | "xls";
@@ -39,6 +40,7 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
   const [format, setFormat] = useState<Format>("md");
   const [saveToCloud, setSaveToCloud] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const summary = useMemo(
     () => [
@@ -53,6 +55,7 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
 
   const download = async () => {
     setBusy(true);
+    setExportError(null);
     try {
       const fmt = FORMATS.find((f) => f.key === format)!;
       const filename = `retention-report-${period.key}-${Date.now()}${fmt.ext}`;
@@ -72,7 +75,8 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
       URL.revokeObjectURL(url);
 
       if (saveToCloud) {
-        const { data: userData } = await supabase.auth.getUser();
+        const { data: userData, error: userErr } = await supabase.auth.getUser();
+        if (userErr) throw userErr;
         if (!userData.user) throw new Error("Not signed in");
         const path = `${userData.user.id}/${filename}`;
         const { error: uploadError } = await supabase.storage.from("reports").upload(path, blob, { contentType: fmt.mime, upsert: false });
@@ -91,9 +95,12 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
       }
       setOpen(false);
     } catch (err) {
-      if (notifyIfRlsError(err)) return;
-      toast.error(err instanceof Error ? err.message : "Export failed");
-
+      if (handleAuthError(err)) return;
+      if (notifyIfRlsError(err)) {
+        setExportError("You don't have permission to save reports.");
+        return;
+      }
+      setExportError(err instanceof Error ? err.message : "Export failed");
     } finally {
       setBusy(false);
     }
@@ -149,6 +156,11 @@ export function ExportReportDialog({ trigger, accounts, topDrivers, kpis, funnel
           </section>
         </div>
 
+        {exportError && (
+          <p role="alert" className="text-[12px] text-destructive leading-snug">
+            {exportError}
+          </p>
+        )}
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}><X className="size-4" /> Cancel</Button>
           <Button onClick={download} disabled={busy}><Download className="size-4" /> {busy ? "Working…" : "Download report"}</Button>

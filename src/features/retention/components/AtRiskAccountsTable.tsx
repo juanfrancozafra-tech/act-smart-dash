@@ -151,6 +151,21 @@ export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
     });
   };
 
+  if (accounts.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-8 text-center">
+        <h3 className="text-sm font-semibold">No at-risk accounts in this window — nice work</h3>
+        <p className="text-xs text-muted-foreground mt-1">
+          All accounts look healthy for the current period.{" "}
+          <Link to="/" className="text-primary hover:underline">
+            Widen the period
+          </Link>{" "}
+          to see longer-range patterns.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Mail,
@@ -16,6 +17,7 @@ import { HealthGauge } from "./HealthGauge";
 import { AccountDetailSkeleton } from "./AccountDetailSkeleton";
 import { AccountEmptyState } from "./AccountEmptyState";
 import { InterventionComposer, type InterventionStep } from "./InterventionComposer";
+import { ErrorRetryCard } from "@/components/ErrorRetryCard";
 import {
   useAccount,
   useRetentionData,
@@ -28,15 +30,29 @@ import { useCurrentRole } from "@/hooks/useCurrentRole";
 
 export function AccountDetailScreen({ accountId }: { accountId: string }) {
   const [step, setStep] = useState<InterventionStep>("idle");
-  const { data: account, isLoading } = useAccount(accountId);
+  const [bypassEmpty, setBypassEmpty] = useState(false);
+  const { data: account, isLoading, error } = useAccount(accountId);
   const { data: retention } = useRetentionData();
   const { data: onboardingSteps } = useAccountOnboarding(accountId);
   const { data: riskSignals } = useAccountRiskSignals(accountId);
   const { data: cohortSummary } = useCohortSummary();
   const { canWrite } = useCurrentRole();
+  const queryClient = useQueryClient();
   const recommendedInterventions = retention?.recommendedInterventions ?? [];
   const windowDays = cohortSummary?.cohort?.windowDays ?? 90;
 
+
+  if (error) {
+    return (
+      <AppShell>
+        <ErrorRetryCard
+          title="Failed to load account"
+          message={(error as Error).message}
+          onRetry={() => queryClient.invalidateQueries({ queryKey: ["account", accountId] })}
+        />
+      </AppShell>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -59,10 +75,16 @@ export function AccountDetailScreen({ accountId }: { accountId: string }) {
     account.onboardingCompletion < 10 &&
     account.invitedSeats === 0;
 
-  if (hasNoSignal) {
+  if (hasNoSignal && !bypassEmpty) {
     return (
       <AppShell>
-        <AccountEmptyState accountName={account.name} />
+        <AccountEmptyState
+          accountName={account.name}
+          onSendFirstInvite={() => {
+            setBypassEmpty(true);
+            setStep("compose");
+          }}
+        />
       </AppShell>
     );
   }

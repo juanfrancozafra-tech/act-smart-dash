@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { PeriodProvider } from "../features/retention/data/periodContext";
 import { supabase } from "../integrations/supabase/client";
 import { Toaster } from "sonner";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 function NotFoundComponent() {
   return (
@@ -126,10 +127,18 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // Session expiry: treat SIGNED_OUT OR TOKEN_REFRESHED-without-session as an expired session.
+      if (event === "SIGNED_OUT" || (event === "TOKEN_REFRESHED" && !session)) {
+        queryClient.clear();
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
+          router.navigate({ to: "/auth", search: { reason: "expired" } });
+        }
+        return;
+      }
+      if (event !== "SIGNED_IN" && event !== "USER_UPDATED") return;
       router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+      queryClient.invalidateQueries();
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
@@ -137,8 +146,10 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <PeriodProvider>
-        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-        <Outlet />
+        <ErrorBoundary>
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </ErrorBoundary>
         <Toaster richColors position="top-right" />
       </PeriodProvider>
     </QueryClientProvider>

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Download } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/features/shell/AppShell";
 import { PeriodSelector } from "./PeriodSelector";
 import { ExportReportDialog } from "./ExportReportDialog";
@@ -13,6 +14,8 @@ import { AIInsightsPanel } from "./AIInsightsPanel";
 import { RecommendedInterventionsPanel } from "./RecommendedInterventionsPanel";
 import { UserQuotesStrip } from "./UserQuotesStrip";
 import { DashboardEmptyState } from "./DashboardEmptyState";
+import { RetentionDashboardSkeleton } from "./skeletons";
+import { ErrorRetryCard } from "@/components/ErrorRetryCard";
 import { useRetentionData, useKpiDefinitions, type KpiDefinition } from "../data/retentionData";
 import { usePeriod } from "../data/periodContext";
 import { useCurrentRole } from "@/hooks/useCurrentRole";
@@ -36,6 +39,7 @@ export function RetentionDashboard() {
   const { data, isLoading, error } = useRetentionData();
   const { data: kpiDefs } = useKpiDefinitions();
   const { canWrite } = useCurrentRole();
+  const queryClient = useQueryClient();
 
 
   const scaled = useMemo(() => {
@@ -48,38 +52,28 @@ export function RetentionDashboard() {
     };
   }, [data, period.days]);
 
-  if (isLoading || !data || !scaled) {
+  if (error) {
     return (
       <AppShell>
-        <div className="px-8 py-7 max-w-[1440px] mx-auto">
-          <div className="h-8 w-64 bg-muted animate-pulse rounded mb-6" />
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-px rounded-xl border border-border bg-border overflow-hidden mb-8">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-24 bg-card animate-pulse" />
-            ))}
-          </div>
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="h-64 bg-card border border-border rounded-xl animate-pulse" />
-              <div className="h-64 bg-card border border-border rounded-xl animate-pulse" />
-            </div>
-            <div className="h-96 bg-card border border-border rounded-xl animate-pulse" />
-          </div>
-        </div>
+        <ErrorRetryCard
+          title="Failed to load retention data"
+          message={(error as Error).message}
+          onRetry={() => queryClient.invalidateQueries({ queryKey: ["retention-data"] })}
+        />
       </AppShell>
     );
   }
 
-  if (error) {
+  if (isLoading || !data || !scaled) {
     return (
       <AppShell>
-        <div className="p-8 text-sm text-destructive">Failed to load retention data: {(error as Error).message}</div>
+        <RetentionDashboardSkeleton />
       </AppShell>
     );
   }
 
   const { kpis, churnTrend, funnel, atRisk } = scaled;
-  const noSignals = atRisk.length === 0 && churnTrend.length <= 1;
+  const noSignals = data.accounts.length === 0 || (atRisk.length === 0 && churnTrend.length <= 1);
 
   if (noSignals) {
     return (
