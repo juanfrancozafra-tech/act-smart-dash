@@ -229,7 +229,16 @@ export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]
                   key={a.id}
                   layout
                   transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                  className="border-t border-border hover:bg-muted/40 group"
+                  onClick={() => navigate({ to: "/accounts/$id", params: { id: a.id } })}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate({ to: "/accounts/$id", params: { id: a.id } });
+                    }
+                  }}
+                  className="border-t border-border hover:bg-muted/40 group cursor-pointer focus:outline-none focus-visible:bg-muted/60"
                 >
                   <td className="px-5 py-3">
                     <Link to="/accounts/$id" params={{ id: a.id }} className="font-medium hover:text-primary">
