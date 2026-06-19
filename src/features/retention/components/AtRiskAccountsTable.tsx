@@ -218,7 +218,7 @@ export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]
                 <SortHeader label="Risk" sortKey="riskLevel" active={sort} onToggle={toggle} />
               </th>
               {isHero && <th className="text-left font-medium px-3 py-2.5">Activation</th>}
-              {isHero && <th className="text-left font-medium px-3 py-2.5">Recommended next action</th>}
+              
               {!isHero && <th className="text-left font-medium px-3 py-2.5">Invites</th>}
               {!isHero && (
                 <th className="text-left font-medium px-3 py-2.5">
