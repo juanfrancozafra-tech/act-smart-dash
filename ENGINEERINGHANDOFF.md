@@ -53,7 +53,7 @@
 ### Retention components (`src/features/retention/components/`)
 | Component | Purpose |
 | --- | --- |
-| `RetentionDashboard` | Composition root for `/`. Lays out the **hero At-Risk table** (above the fold), KPI strip, charts, AI panel, and the full At-Risk table. Holds dashboard-level state (sort, empty detection). The hero block filters `atRisk` to `High`/`Medium`, sorts by `RISK_RANK desc` then `healthScore asc`, slices to 6, and renders `<AtRiskAccountsTable variant="hero" />`. Falls back to "lowest 6 health" if no High/Medium rows exist. |
+| `RetentionDashboard` | Composition root for `/`. Lays out the **hero At-Risk table** (above the fold), KPI strip, charts, and AI panel. Holds dashboard-level state (sort, empty detection). The hero block filters `atRisk` to `High`/`Medium`, sorts by `RISK_RANK desc` then `healthScore asc`, slices to 6, and renders `<AtRiskAccountsTable variant="hero" />`. Falls back to "lowest 6 health" if no High/Medium rows exist. The previously duplicated full At-Risk table below the charts has been removed — the hero is the single triage surface. |
 | `AccountDetailScreen` | Composition root for `/accounts/$id`. Owns the simulated 750ms fetch, skeleton, empty state, and intervention flow state machine. |
 | `KpiCard` | Single KPI tile with hover popover (definition, why-it-matters, next step). Rendered five times in a strip. |
 | `ChurnTrendChart` | 12-week churn line (Recharts). Reads scaled data from period context. |
