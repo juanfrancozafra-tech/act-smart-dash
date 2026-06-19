@@ -17,16 +17,6 @@ function activationStatus(a: Account): { label: string; tone: "danger" | "warn" 
   return { label: `Activated · ${pct}%`, tone: "ok" };
 }
 
-function nextAction(a: Account): string {
-  const risk = (a.primaryRisk || "").toLowerCase();
-  if (a.invitedSeats / Math.max(a.seats, 1) < 0.4) return "Nudge admin to invite team";
-  if (a.onboardingCompletion < 40) return "Trigger onboarding checklist";
-  if (risk.includes("login") || risk.includes("inactive") || risk.includes("active")) return "Send re-engagement email";
-  if (risk.includes("feature") || risk.includes("adopt")) return "Schedule feature walkthrough";
-  if (risk.includes("support") || risk.includes("ticket")) return "Escalate to CSM";
-  if (a.healthScore < 40) return "Book executive check-in";
-  return "Review account health";
-}
 
 // ---------- Sort plumbing ----------
 
@@ -218,7 +208,7 @@ export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]
                 <SortHeader label="Risk" sortKey="riskLevel" active={sort} onToggle={toggle} />
               </th>
               {isHero && <th className="text-left font-medium px-3 py-2.5">Activation</th>}
-              {isHero && <th className="text-left font-medium px-3 py-2.5">Recommended next action</th>}
+              
               {!isHero && <th className="text-left font-medium px-3 py-2.5">Invites</th>}
               {!isHero && (
                 <th className="text-left font-medium px-3 py-2.5">
@@ -285,18 +275,6 @@ export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]
                       </td>
                     );
                   })()}
-                  {isHero && (
-                    <td className="px-3 py-3">
-                      <Link
-                        to="/accounts/$id"
-                        params={{ id: a.id }}
-                        className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline"
-                      >
-                        {nextAction(a)}
-                        <ChevronRight className="size-3.5" />
-                      </Link>
-                    </td>
-                  )}
                   {!isHero && (
                     <td className="px-3 py-3 text-muted-foreground tabular-nums">
                       {a.invitedSeats}/{a.seats}
