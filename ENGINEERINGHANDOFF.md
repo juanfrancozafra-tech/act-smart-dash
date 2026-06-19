@@ -175,7 +175,9 @@ This decision determines whether the intervention panel becomes a real growth to
 - **Roles live in `user_roles`, not on `profiles`.** Never check role from the client by reading a column on the user — privilege-escalation risk. Use `useCurrentRole` for UI and `has_role()` (SECURITY DEFINER) for RLS.
 - **Don't trust `navigator.onLine`.** The `OfflineBanner` learned this the hard way; always probe a real endpoint with a short timeout before declaring "offline".
 - **Don't bypass `handleAuthError`.** A direct `supabase.auth.signOut()` or ad-hoc redirect on 401 fragments the session-expiry UX. Funnel every 401 through the helper so the cache is cleared and the banner reason is set.
+- **The hero At-Risk block lives in `RetentionDashboard`, not in the table component.** Filtering (`High`/`Medium`), sorting (risk desc → health asc), and the 6-row slice are dashboard concerns; `AtRiskAccountsTable` just renders what it's given. If you need the hero elsewhere, lift the slice helper into `features/retention/data/`. The `variant` prop only changes presentation (title, ring, columns) — it does not re-sort or re-filter.
+- **Don't strip the hero block to "clean up" the dashboard.** It's the answer to user-test data (only 22% of testers reached an account detail page). Removing it regresses the success criteria documented in `LIVINGPRD.md` §7.
 
 ---
 
-*Last updated alongside the auth-hardening + resilience pass (auth gate, `user_roles` / RLS, `ErrorBoundary`, `ErrorRetryCard`, `OfflineBanner`, `handleAuthError`, `rlsToast`). Keep this file in sync when components move or the data layer changes.*
+*Last updated alongside the hero "Accounts Requiring Immediate Attention" pass (above-the-fold At-Risk triage table with Activation + Recommended next action columns on the dashboard home). Keep this file in sync when components move or the data layer changes.*
