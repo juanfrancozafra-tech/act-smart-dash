@@ -151,6 +151,13 @@ export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
     });
   };
 
+  const variant = (props as any).variant as "hero" | "default" | undefined;
+  const isHero = variant === "hero";
+  const title = isHero ? "Accounts Requiring Immediate Attention" : "At-risk accounts";
+  const subtitle = isHero
+    ? "These accounts show early churn signals based on activation gaps, engagement patterns, and team adoption metrics."
+    : `${accounts.length} accounts likely to churn in the next 30 days · $89.8K ARR exposure`;
+
   if (accounts.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 text-center">
@@ -167,17 +174,17 @@ export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <div>
-          <h3 className="text-sm font-semibold">At-risk accounts</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {accounts.length} accounts likely to churn in the next 30 days · $89.8K ARR exposure
-          </p>
+    <div className={`rounded-xl border bg-card overflow-hidden ${isHero ? "border-primary/30 shadow-sm ring-1 ring-primary/10" : "border-border"}`}>
+      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border">
+        <div className="min-w-0">
+          <h2 className={isHero ? "text-base font-semibold tracking-tight" : "text-sm font-semibold"}>{title}</h2>
+          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>
         </div>
-        <button className="text-xs font-medium text-primary hover:underline">
-          View all 47 →
-        </button>
+        {!isHero && (
+          <button className="text-xs font-medium text-primary hover:underline shrink-0">
+            View all 47 →
+          </button>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
