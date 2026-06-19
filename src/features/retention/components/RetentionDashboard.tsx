@@ -159,8 +159,8 @@ export function RetentionDashboard() {
               <InviteVsRetentionChart data={data.inviteVsRetention} />
               <TopDriversChart drivers={data.topDrivers} />
             </div>
-            </div>
           </div>
+
 
           <aside className="space-y-6">
             <AIInsightsPanel insights={data.aiInsights} />
