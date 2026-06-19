@@ -10,6 +10,24 @@ function riskClass(level: RiskLevel) {
   return "risk-pill-low";
 }
 
+function activationStatus(a: Account): { label: string; tone: "danger" | "warn" | "ok" } {
+  const pct = a.onboardingCompletion ?? 0;
+  if (pct < 40) return { label: `Not activated · ${pct}%`, tone: "danger" };
+  if (pct < 80) return { label: `Partial · ${pct}%`, tone: "warn" };
+  return { label: `Activated · ${pct}%`, tone: "ok" };
+}
+
+function nextAction(a: Account): string {
+  const risk = (a.primaryRisk || "").toLowerCase();
+  if (a.invitedSeats / Math.max(a.seats, 1) < 0.4) return "Nudge admin to invite team";
+  if (a.onboardingCompletion < 40) return "Trigger onboarding checklist";
+  if (risk.includes("login") || risk.includes("inactive") || risk.includes("active")) return "Send re-engagement email";
+  if (risk.includes("feature") || risk.includes("adopt")) return "Schedule feature walkthrough";
+  if (risk.includes("support") || risk.includes("ticket")) return "Escalate to CSM";
+  if (a.healthScore < 40) return "Book executive check-in";
+  return "Review account health";
+}
+
 // ---------- Sort plumbing ----------
 
 type SortKey = "name" | "healthScore" | "riskLevel" | "lastActive" | "arr";
@@ -112,7 +130,7 @@ function SortHeader({ label, sortKey, active, align = "left", onToggle }: SortHe
   );
 }
 
-export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
+export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]; variant?: "hero" | "default" }) {
   const [sort, setSort] = useState<SortState>({ key: "riskLevel", dir: "desc" });
   const [hydrated, setHydrated] = useState(false);
 
@@ -151,6 +169,12 @@ export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
     });
   };
 
+  const isHero = variant === "hero";
+  const title = isHero ? "Accounts Requiring Immediate Attention" : "At-risk accounts";
+  const subtitle = isHero
+    ? "These accounts show early churn signals based on activation gaps, engagement patterns, and team adoption metrics."
+    : `${accounts.length} accounts likely to churn in the next 30 days · $89.8K ARR exposure`;
+
   if (accounts.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card p-8 text-center">
@@ -167,17 +191,17 @@ export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <div>
-          <h3 className="text-sm font-semibold">At-risk accounts</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {accounts.length} accounts likely to churn in the next 30 days · $89.8K ARR exposure
-          </p>
+    <div className={`rounded-xl border bg-card overflow-hidden ${isHero ? "border-primary/30 shadow-sm ring-1 ring-primary/10" : "border-border"}`}>
+      <div className="flex items-start justify-between gap-4 px-5 py-4 border-b border-border">
+        <div className="min-w-0">
+          <h2 className={isHero ? "text-base font-semibold tracking-tight" : "text-sm font-semibold"}>{title}</h2>
+          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>
         </div>
-        <button className="text-xs font-medium text-primary hover:underline">
-          View all 47 →
-        </button>
+        {!isHero && (
+          <button className="text-xs font-medium text-primary hover:underline shrink-0">
+            View all 47 →
+          </button>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -193,10 +217,14 @@ export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
               <th className="text-left font-medium px-3 py-2.5">
                 <SortHeader label="Risk" sortKey="riskLevel" active={sort} onToggle={toggle} />
               </th>
-              <th className="text-left font-medium px-3 py-2.5">Invites</th>
-              <th className="text-left font-medium px-3 py-2.5">
-                <SortHeader label="Last active" sortKey="lastActive" active={sort} onToggle={toggle} />
-              </th>
+              {isHero && <th className="text-left font-medium px-3 py-2.5">Activation</th>}
+              {isHero && <th className="text-left font-medium px-3 py-2.5">Recommended next action</th>}
+              {!isHero && <th className="text-left font-medium px-3 py-2.5">Invites</th>}
+              {!isHero && (
+                <th className="text-left font-medium px-3 py-2.5">
+                  <SortHeader label="Last active" sortKey="lastActive" active={sort} onToggle={toggle} />
+                </th>
+              )}
               <th className="text-right font-medium px-5 py-2.5">
                 <SortHeader label="ARR" sortKey="arr" active={sort} align="right" onToggle={toggle} />
               </th>
@@ -243,10 +271,38 @@ export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
                       {a.riskLevel}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-muted-foreground tabular-nums">
-                    {a.invitedSeats}/{a.seats}
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">{a.lastActive}</td>
+                  {isHero && (() => {
+                    const s = activationStatus(a);
+                    const toneClass =
+                      s.tone === "danger" ? "bg-[color:var(--risk-high)]/10 text-[color:var(--risk-high)]"
+                      : s.tone === "warn" ? "bg-[color:var(--risk-medium)]/15 text-[color:var(--risk-medium)]"
+                      : "bg-[color:var(--risk-low)]/15 text-[color:var(--risk-low)]";
+                    return (
+                      <td className="px-3 py-3">
+                        <span className={`inline-flex px-2 py-0.5 rounded-md text-[11px] font-medium ${toneClass}`}>
+                          {s.label}
+                        </span>
+                      </td>
+                    );
+                  })()}
+                  {isHero && (
+                    <td className="px-3 py-3">
+                      <Link
+                        to="/accounts/$id"
+                        params={{ id: a.id }}
+                        className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline"
+                      >
+                        {nextAction(a)}
+                        <ChevronRight className="size-3.5" />
+                      </Link>
+                    </td>
+                  )}
+                  {!isHero && (
+                    <td className="px-3 py-3 text-muted-foreground tabular-nums">
+                      {a.invitedSeats}/{a.seats}
+                    </td>
+                  )}
+                  {!isHero && <td className="px-3 py-3 text-muted-foreground">{a.lastActive}</td>}
                   <td className="px-5 py-3 text-right font-medium tabular-nums">
                     ${(a.arr / 1000).toFixed(1)}K
                   </td>
