@@ -43,7 +43,7 @@ The triage surface. Designed so the dominant churn driver is legible in under 10
 - **Activation funnel** — Signup → First action → Invite teammate → Repeat usage → Retained.
 - **Team Invite vs. Retention** — the headline chart: accounts that invite a teammate retain at **2.7×** the rate of solo accounts. This is the visual answer to the hypothesis.
 - **AI-generated insights panel** — plain-language summary of the biggest current risk driver.
-- **At-Risk Accounts table (full)** — the complete sortable list with health score, risk tier, primary churn signal, invites, last active, and ARR. Same component, `variant="default"`. One click drills into an account.
+- *(The previously duplicated full At-Risk table below the fold was removed — the hero block is now the single triage surface on the dashboard. The full sortable list still lives on the account drill-down flow.)*
 
 ### 2. Account Detail (`/accounts/$id`)
 The intervention surface. Designed so a user can go from "this account looks bad" to "intervention sent" in under 30 seconds.
