@@ -37,7 +37,7 @@ The Retention Engine prototype gives a cross-functional team a single surface to
 ### 1. Retention Dashboard (`/`)
 The triage surface. Designed so the dominant churn driver is legible in under 10 seconds.
 
-- **Hero: "Accounts Requiring Immediate Attention"** — the first thing users see above the fold after login. A focused, above-the-fold variant of the At-Risk table (top 6, High → Medium, pre-sorted by risk then health ascending) with two extra columns tuned for triage: **Activation** (color-coded onboarding %) and **Recommended next action** (e.g. *Nudge admin to invite team*, *Trigger onboarding checklist*, *Send re-engagement email*) deep-linking into the account. Goal: identify an at-risk account in <30s; lift account-detail visit rate from 22% → 60%+.
+- **Hero: "Accounts Requiring Immediate Attention"** — the first thing users see above the fold after login. A focused, above-the-fold variant of the At-Risk table (top 6, High → Medium, pre-sorted by risk then health ascending) with an **Activation** column (color-coded onboarding %) added alongside Account, Health, Primary risk, Risk, and ARR. **Every row is fully clickable** (and keyboard-activatable with Enter/Space) and routes to the account detail page. Goal: identify an at-risk account in <30s; lift account-detail visit rate from 22% → 60%+.
 - **KPI cards** — 90-day retention (70%), churn rate (30%), at-risk accounts, MRR at risk. Rendered *below* the hero table so secondary metrics never compete with the primary action.
 - **Churn curve** — 12-week trend showing where accounts drop off.
 - **Activation funnel** — Signup → First action → Invite teammate → Repeat usage → Retained.
