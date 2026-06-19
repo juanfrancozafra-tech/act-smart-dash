@@ -125,6 +125,24 @@ export function RetentionDashboard() {
 
         </div>
 
+        {(() => {
+          const RISK_RANK = { High: 3, Medium: 2, Low: 1 } as const;
+          const priority = [...atRisk]
+            .filter((a) => a.riskLevel === "High" || a.riskLevel === "Medium")
+            .sort((a, b) =>
+              RISK_RANK[b.riskLevel] - RISK_RANK[a.riskLevel] || a.healthScore - b.healthScore,
+            )
+            .slice(0, 6);
+          const hero = priority.length > 0
+            ? priority
+            : [...atRisk].sort((a, b) => a.healthScore - b.healthScore).slice(0, 6);
+          return hero.length > 0 ? (
+            <div className="mb-8">
+              <AtRiskAccountsTable accounts={hero} variant="hero" />
+            </div>
+          ) : null;
+        })()}
+
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-px rounded-xl border border-border bg-border overflow-hidden mb-8">
           <KpiCard {...kpis.retention90} info={infoFor("retention90", kpiDefs)} variant="bare" />
           <KpiCard {...kpis.churn90} info={infoFor("churn90", kpiDefs)} variant="bare" />
