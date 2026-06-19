@@ -45,7 +45,7 @@ The prototype is designed to make this hypothesis obviously correct or obviously
 - **Activation funnel** — Sign Up → Onboarding → Team Invite → Activation → Retained.
 - **Invite vs. Retention chart** — the headline visual: invited cohorts retain ~2.7× the rate of solo accounts.
 - **AI Insights panel** — plain-language summary of the dominant churn driver and a suggested action.
-- **At-Risk Accounts table (full)** — sortable (Account, Health, Risk, Invites, Last active, ARR); default Risk High → Low; sort persists across navigation. Same component as the hero, `variant="default"`.
+- *Removed:* the duplicate full At-Risk table previously rendered below the charts. The hero block is now the single At-Risk surface on the dashboard, per user-test feedback that a second table competed with the primary triage action.
 
 ### 5.2 Account Detail — `/accounts/$id`
 **Purpose:** Intervention. Go from *"this account looks bad"* to *"intervention sent"* in under 30 seconds.
