@@ -95,6 +95,9 @@ Supporting flows: change global period → all visualizations recalculate · exp
 **Product validation (does the surface work?)**
 - Time-to-first-insight: top churn driver identified in **≤ 10s**.
 - Time-to-intervention: at-risk account → sent nudge in **≤ 30s**.
+- **At-risk identification:** ≥ 80% of users identify an at-risk account within 30s of opening the dashboard (driven by the new hero block).
+- **Account-detail visit rate:** lift from 22% → **≥ 60%** of sessions (baseline from user testing: 2/9).
+- **Time to first actionable insight:** decrease by **50%** vs. pre-hero baseline.
 - Hypothesis legibility: 100% of testers correctly state the invite-vs-retention relationship after one viewing.
 
 **Business metrics surfaced inside the product**
