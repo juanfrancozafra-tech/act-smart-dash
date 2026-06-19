@@ -17,16 +17,6 @@ function activationStatus(a: Account): { label: string; tone: "danger" | "warn" 
   return { label: `Activated · ${pct}%`, tone: "ok" };
 }
 
-function nextAction(a: Account): string {
-  const risk = (a.primaryRisk || "").toLowerCase();
-  if (a.invitedSeats / Math.max(a.seats, 1) < 0.4) return "Nudge admin to invite team";
-  if (a.onboardingCompletion < 40) return "Trigger onboarding checklist";
-  if (risk.includes("login") || risk.includes("inactive") || risk.includes("active")) return "Send re-engagement email";
-  if (risk.includes("feature") || risk.includes("adopt")) return "Schedule feature walkthrough";
-  if (risk.includes("support") || risk.includes("ticket")) return "Escalate to CSM";
-  if (a.healthScore < 40) return "Book executive check-in";
-  return "Review account health";
-}
 
 // ---------- Sort plumbing ----------
 
