@@ -112,7 +112,7 @@ function SortHeader({ label, sortKey, active, align = "left", onToggle }: SortHe
   );
 }
 
-export function AtRiskAccountsTable({ accounts }: { accounts: Account[] }) {
+export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]; variant?: "hero" | "default" }) {
   const [sort, setSort] = useState<SortState>({ key: "riskLevel", dir: "desc" });
   const [hydrated, setHydrated] = useState(false);
 
