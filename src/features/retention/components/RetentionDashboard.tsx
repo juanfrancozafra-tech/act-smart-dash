@@ -159,7 +159,7 @@ export function RetentionDashboard() {
               <InviteVsRetentionChart data={data.inviteVsRetention} />
               <TopDriversChart drivers={data.topDrivers} />
             </div>
-            <AtRiskAccountsTable accounts={atRisk} />
+            </div>
           </div>
 
           <aside className="space-y-6">
