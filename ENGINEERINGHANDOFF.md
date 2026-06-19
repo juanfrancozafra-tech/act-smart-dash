@@ -180,4 +180,4 @@ This decision determines whether the intervention panel becomes a real growth to
 
 ---
 
-*Last updated alongside the hero "Accounts Requiring Immediate Attention" pass (above-the-fold At-Risk triage table with Activation + Recommended next action columns on the dashboard home). Keep this file in sync when components move or the data layer changes.*
+*Last updated: hero "Accounts Requiring Immediate Attention" pass — above-the-fold At-Risk triage table with an Activation column and full-row click-to-navigate (keyboard-accessible). The "Recommended next action" column was removed; the duplicate full At-Risk table below the charts was removed. Keep this file in sync when components move or the data layer changes.*
