@@ -151,7 +151,6 @@ export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]
     });
   };
 
-  const variant = (props as any).variant as "hero" | "default" | undefined;
   const isHero = variant === "hero";
   const title = isHero ? "Accounts Requiring Immediate Attention" : "At-risk accounts";
   const subtitle = isHero
