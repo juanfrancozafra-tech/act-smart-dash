@@ -37,14 +37,15 @@ The prototype is designed to make this hypothesis obviously correct or obviously
 ## 5. Screens and their purpose
 
 ### 5.1 Retention Dashboard — `/`
-**Purpose:** Triage. Answer *"who is at risk and why?"* in under 10 seconds.
+**Purpose:** Triage. Answer *"who is at risk and why?"* in under 10 seconds — and get to a specific account within 30.
 - **Page header** — title, status row, global Period Selector (7d / 30d / 90d / custom), Export Report (.md / .csv / .xls).
-- **KPI strip** — 90-day retention, churn rate, activated accounts, team-invite rate, average health. Hover reveals calculation, why-it-matters, and recommended next step.
+- **Hero: "Accounts Requiring Immediate Attention"** — above-the-fold triage table, the first thing users see after login. Top 6 accounts filtered to `High`/`Medium` risk, pre-sorted by risk then health ascending. Columns: **Account · Health · Primary risk · Risk · Activation · Recommended next action · ARR**. Each row deep-links to the account detail page; the action column suggests the next step (e.g. *Nudge admin to invite team*, *Trigger onboarding checklist*, *Send re-engagement email*, *Schedule feature walkthrough*, *Escalate to CSM*, *Book executive check-in*) derived from invite ratio, onboarding %, and primary risk. Introduced in response to user-test data (only 3/9 testers reached the Retention page; only 2 opened an account detail).
+- **KPI strip** — 90-day retention, churn rate, activated accounts, team-invite rate, average health. Rendered **below** the hero so secondary metrics never compete with the primary action. Hover reveals calculation, why-it-matters, and recommended next step.
 - **Churn curve** — 12-week trend.
 - **Activation funnel** — Sign Up → Onboarding → Team Invite → Activation → Retained.
 - **Invite vs. Retention chart** — the headline visual: invited cohorts retain ~2.7× the rate of solo accounts.
 - **AI Insights panel** — plain-language summary of the dominant churn driver and a suggested action.
-- **At-Risk Accounts table** — sortable (Account, Health, Risk, Last active, ARR); default Risk High → Low; sort persists across navigation.
+- **At-Risk Accounts table (full)** — sortable (Account, Health, Risk, Invites, Last active, ARR); default Risk High → Low; sort persists across navigation. Same component as the hero, `variant="default"`.
 
 ### 5.2 Account Detail — `/accounts/$id`
 **Purpose:** Intervention. Go from *"this account looks bad"* to *"intervention sent"* in under 30 seconds.
