@@ -271,10 +271,38 @@ export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]
                       {a.riskLevel}
                     </span>
                   </td>
-                  <td className="px-3 py-3 text-muted-foreground tabular-nums">
-                    {a.invitedSeats}/{a.seats}
-                  </td>
-                  <td className="px-3 py-3 text-muted-foreground">{a.lastActive}</td>
+                  {isHero && (() => {
+                    const s = activationStatus(a);
+                    const toneClass =
+                      s.tone === "danger" ? "bg-[color:var(--risk-high)]/10 text-[color:var(--risk-high)]"
+                      : s.tone === "warn" ? "bg-[color:var(--risk-medium)]/15 text-[color:var(--risk-medium)]"
+                      : "bg-[color:var(--risk-low)]/15 text-[color:var(--risk-low)]";
+                    return (
+                      <td className="px-3 py-3">
+                        <span className={`inline-flex px-2 py-0.5 rounded-md text-[11px] font-medium ${toneClass}`}>
+                          {s.label}
+                        </span>
+                      </td>
+                    );
+                  })()}
+                  {isHero && (
+                    <td className="px-3 py-3">
+                      <Link
+                        to="/accounts/$id"
+                        params={{ id: a.id }}
+                        className="inline-flex items-center gap-1 text-[13px] font-medium text-primary hover:underline"
+                      >
+                        {nextAction(a)}
+                        <ChevronRight className="size-3.5" />
+                      </Link>
+                    </td>
+                  )}
+                  {!isHero && (
+                    <td className="px-3 py-3 text-muted-foreground tabular-nums">
+                      {a.invitedSeats}/{a.seats}
+                    </td>
+                  )}
+                  {!isHero && <td className="px-3 py-3 text-muted-foreground">{a.lastActive}</td>}
                   <td className="px-5 py-3 text-right font-medium tabular-nums">
                     ${(a.arr / 1000).toFixed(1)}K
                   </td>
