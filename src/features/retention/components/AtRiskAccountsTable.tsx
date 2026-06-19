@@ -217,10 +217,14 @@ export function AtRiskAccountsTable({ accounts, variant }: { accounts: Account[]
               <th className="text-left font-medium px-3 py-2.5">
                 <SortHeader label="Risk" sortKey="riskLevel" active={sort} onToggle={toggle} />
               </th>
-              <th className="text-left font-medium px-3 py-2.5">Invites</th>
-              <th className="text-left font-medium px-3 py-2.5">
-                <SortHeader label="Last active" sortKey="lastActive" active={sort} onToggle={toggle} />
-              </th>
+              {isHero && <th className="text-left font-medium px-3 py-2.5">Activation</th>}
+              {isHero && <th className="text-left font-medium px-3 py-2.5">Recommended next action</th>}
+              {!isHero && <th className="text-left font-medium px-3 py-2.5">Invites</th>}
+              {!isHero && (
+                <th className="text-left font-medium px-3 py-2.5">
+                  <SortHeader label="Last active" sortKey="lastActive" active={sort} onToggle={toggle} />
+                </th>
+              )}
               <th className="text-right font-medium px-5 py-2.5">
                 <SortHeader label="ARR" sortKey="arr" active={sort} align="right" onToggle={toggle} />
               </th>
