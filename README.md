@@ -37,12 +37,13 @@ The Retention Engine prototype gives a cross-functional team a single surface to
 ### 1. Retention Dashboard (`/`)
 The triage surface. Designed so the dominant churn driver is legible in under 10 seconds.
 
-- **KPI cards** — 90-day retention (70%), churn rate (30%), at-risk accounts, MRR at risk.
+- **Hero: "Accounts Requiring Immediate Attention"** — the first thing users see above the fold after login. A focused, above-the-fold variant of the At-Risk table (top 6, High → Medium, pre-sorted by risk then health ascending) with two extra columns tuned for triage: **Activation** (color-coded onboarding %) and **Recommended next action** (e.g. *Nudge admin to invite team*, *Trigger onboarding checklist*, *Send re-engagement email*) deep-linking into the account. Goal: identify an at-risk account in <30s; lift account-detail visit rate from 22% → 60%+.
+- **KPI cards** — 90-day retention (70%), churn rate (30%), at-risk accounts, MRR at risk. Rendered *below* the hero table so secondary metrics never compete with the primary action.
 - **Churn curve** — 12-week trend showing where accounts drop off.
 - **Activation funnel** — Signup → First action → Invite teammate → Repeat usage → Retained.
 - **Team Invite vs. Retention** — the headline chart: accounts that invite a teammate retain at **2.7×** the rate of solo accounts. This is the visual answer to the hypothesis.
 - **AI-generated insights panel** — plain-language summary of the biggest current risk driver.
-- **At-Risk Accounts table** — sortable list with health score, risk tier, and primary churn signal. One click drills into an account.
+- **At-Risk Accounts table (full)** — the complete sortable list with health score, risk tier, primary churn signal, invites, last active, and ARR. Same component, `variant="default"`. One click drills into an account.
 
 ### 2. Account Detail (`/accounts/$id`)
 The intervention surface. Designed so a user can go from "this account looks bad" to "intervention sent" in under 30 seconds.

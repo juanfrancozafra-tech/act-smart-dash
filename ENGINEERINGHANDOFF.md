@@ -53,7 +53,7 @@
 ### Retention components (`src/features/retention/components/`)
 | Component | Purpose |
 | --- | --- |
-| `RetentionDashboard` | Composition root for `/`. Lays out KPI strip, charts, AI panel, At-Risk table. Holds dashboard-level state (sort, empty detection). |
+| `RetentionDashboard` | Composition root for `/`. Lays out the **hero At-Risk table** (above the fold), KPI strip, charts, AI panel, and the full At-Risk table. Holds dashboard-level state (sort, empty detection). The hero block filters `atRisk` to `High`/`Medium`, sorts by `RISK_RANK desc` then `healthScore asc`, slices to 6, and renders `<AtRiskAccountsTable variant="hero" />`. Falls back to "lowest 6 health" if no High/Medium rows exist. |
 | `AccountDetailScreen` | Composition root for `/accounts/$id`. Owns the simulated 750ms fetch, skeleton, empty state, and intervention flow state machine. |
 | `KpiCard` | Single KPI tile with hover popover (definition, why-it-matters, next step). Rendered five times in a strip. |
 | `ChurnTrendChart` | 12-week churn line (Recharts). Reads scaled data from period context. |
@@ -61,7 +61,7 @@
 | `InviteVsRetentionChart` | The hero/headline visual: invited vs. solo cohort retention curves. |
 | `TopDriversChart` | Ranked bar chart of dominant churn drivers across the portfolio. |
 | `AIInsightsPanel` | Plain-language summary + suggested action. Currently static text from `retentionData.ts`. |
-| `AtRiskAccountsTable` | Sortable account table (Account, Health, Risk, Last active, ARR). Owns sort persistence and FLIP row animation. Links to `/accounts/$id`. |
+| `AtRiskAccountsTable` | Sortable account table with two variants. **`variant="hero"`** (above-the-fold triage block): title *"Accounts Requiring Immediate Attention"*, primary-tinted border/ring, columns `Account · Health · Primary risk · Risk · Activation · Recommended next action · ARR`. **`variant="default"`** (full list, below the fold): columns `Account · Health · Primary risk · Risk · Invites · Last active · ARR`. Owns sort persistence (`localStorage` key `retain:atrisk-sort`) and FLIP row animation. `activationStatus()` derives the color-coded onboarding badge (`<40%` danger, `<80%` warn, else ok); `nextAction()` derives the recommended next step from invite ratio, onboarding %, primary-risk text, and health score. Links every row to `/accounts/$id`. |
 | `RecommendedInterventionsPanel` | Cards of pre-baked recommended actions with projected lift. |
 | `UserQuotesStrip` | Static qualitative quotes supporting the narrative. |
 | `HealthGauge` | Custom SVG single-number gauge, color-coded by risk tier. Account detail only. |
@@ -175,7 +175,9 @@ This decision determines whether the intervention panel becomes a real growth to
 - **Roles live in `user_roles`, not on `profiles`.** Never check role from the client by reading a column on the user — privilege-escalation risk. Use `useCurrentRole` for UI and `has_role()` (SECURITY DEFINER) for RLS.
 - **Don't trust `navigator.onLine`.** The `OfflineBanner` learned this the hard way; always probe a real endpoint with a short timeout before declaring "offline".
 - **Don't bypass `handleAuthError`.** A direct `supabase.auth.signOut()` or ad-hoc redirect on 401 fragments the session-expiry UX. Funnel every 401 through the helper so the cache is cleared and the banner reason is set.
+- **The hero At-Risk block lives in `RetentionDashboard`, not in the table component.** Filtering (`High`/`Medium`), sorting (risk desc → health asc), and the 6-row slice are dashboard concerns; `AtRiskAccountsTable` just renders what it's given. If you need the hero elsewhere, lift the slice helper into `features/retention/data/`. The `variant` prop only changes presentation (title, ring, columns) — it does not re-sort or re-filter.
+- **Don't strip the hero block to "clean up" the dashboard.** It's the answer to user-test data (only 22% of testers reached an account detail page). Removing it regresses the success criteria documented in `LIVINGPRD.md` §7.
 
 ---
 
-*Last updated alongside the auth-hardening + resilience pass (auth gate, `user_roles` / RLS, `ErrorBoundary`, `ErrorRetryCard`, `OfflineBanner`, `handleAuthError`, `rlsToast`). Keep this file in sync when components move or the data layer changes.*
+*Last updated alongside the hero "Accounts Requiring Immediate Attention" pass (above-the-fold At-Risk triage table with Activation + Recommended next action columns on the dashboard home). Keep this file in sync when components move or the data layer changes.*
