@@ -11,8 +11,6 @@ A high-fidelity, clickable prototype that helps Product, Growth, and Customer Su
 
 Sign in with the shared demo account:
 
-| | |
-| --- | --- |
 | **Email** | `user@user.com` |
 | **Password** | `T3stUs3r$` |
 
