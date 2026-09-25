@@ -7,6 +7,17 @@ A high-fidelity, clickable prototype that helps Product, Growth, and Customer Su
 
 **Live preview:** https://act-smart-dash.lovable.app
 
+### Demo access
+
+Sign in with the shared demo account:
+
+| | |
+| --- | --- |
+| **Email** | `user@user.com` |
+| **Password** | `T3stUs3r$` |
+
+This is a public test account with sample data only (the companies are fictional). Please don't change its password so others can keep using it.
+
 ---
 
 ## Hypothesis
